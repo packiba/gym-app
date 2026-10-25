@@ -16,7 +16,7 @@ X('Подтягивания обратным или узким нейтраль�
 X('Отжимания от пола с ногами на возвышении','верх груди, трицепс',2,3,10,15),
 X('Подъёмы согнутых ног к груди в висе (до технического отказа)','пресс, кор',2,3,8,15),
 X('Приседания на одной ноге («пистолетики» с опорой)','ноги, стабилизаторы',2,2,8,12)]}});
-let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='';
+let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT='';
 const HINT='Верхняя граница достигнута! Пора усложнять упражнение или добавлять вес.';
 const fmt=d=>new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
 const card='rounded-2xl bg-panel border border-line p-5';
@@ -24,6 +24,7 @@ const btn='min-h-[48px] px-4 rounded-xl font-medium active:scale-[.98] transitio
 const prim=btn+' bg-accent text-ink', sec=btn+' bg-raise border border-line';
 const first=it=>it.sets[0]?.reps||0;
 const seq=sets=>sets.map(s=>`${s.reps}${s.fail?'<span class="text-accent">✱</span>':''}`).join(' · ');
+const paintVer=()=>{if(VERTEXT)document.querySelectorAll('[data-ver]').forEach(el=>el.textContent=VERTEXT)};
 function prevOf(name){for(let i=logs.length-1;i>=0;i--){const it=logs[i].items.find(x=>x.name===name);if(it)return it}return null}
 
 /* ---------- Таймер отдыха ---------- */
@@ -93,12 +94,13 @@ ${f(d,i,'name',e.name)}${f(d,i,'muscles',e.muscles)}
 <div class="grid grid-cols-4 gap-2 text-xs text-mute"><label>Подх. от${f(d,i,'smin',e.smin,'number')}</label><label>до${f(d,i,'smax',e.smax,'number')}</label><label>Повт. от${f(d,i,'min',e.min,'number')}</label><label>до${f(d,i,'max',e.max,'number')}</label></div>
 <button data-act="delEx" data-v="${d}.${i}" class="text-mute text-sm min-h-[40px]">Удалить упражнение</button></div>`).join('')}</div>
 <button data-act="addEx" data-v="${d}" class="${sec} w-full mt-4">Добавить упражнение</button></section>`).join('')}
-<div class="flex gap-3"><button data-act="export" class="${sec} flex-1">Экспорт данных</button><button data-act="reset" class="${sec} flex-1">Сбросить план</button></div>`}
+<div class="flex gap-3"><button data-act="export" class="${sec} flex-1">Экспорт данных</button><button data-act="reset" class="${sec} flex-1">Сбросить план</button></div>
+<p data-ver class="text-center text-[10px] text-mute mt-6"></p>`}
 
 const TABS=[['train','Тренировка'],['diary','Дневник'],['progress','Прогресс'],['plan','План']];
 function render(){
 $('#nav').innerHTML=`<div class="hidden md:block px-4 pb-6 text-lg font-semibold">Fullbody</div>`+TABS.map(([k,l])=>`<button data-act="nav" data-v="${k}" class="flex-1 md:flex-none md:text-left md:px-4 md:h-12 text-sm md:text-base ${view===k?'text-accent border-t-2 md:border-t-0 md:border-l-2 border-accent bg-raise':'text-mute border-t-2 md:border-l-2 border-transparent'}">${l}</button>`).join('');
-$('#app').innerHTML={train:trainView,diary:diaryView,progress:progressView,plan:planView}[view]();paintTimer()}
+$('#app').innerHTML={train:trainView,diary:diaryView,progress:progressView,plan:planView}[view]();paintTimer();paintVer()}
 
 /* ---------- События ---------- */
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,v=t.dataset.v;
@@ -137,5 +139,11 @@ dn.addEventListener('pointerdown',e=>{e.preventDefault();document.activeElement?
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&isSet(e.target)){e.preventDefault();e.target.blur()}});
 
 render();
-if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message',e=>{const m=e.data;if(m?.type==='VERSION'){VERTEXT=`${m.version} · ${m.date}`;paintVer()}});
+  const ask=n=>n?.postMessage({type:'GET_VERSION'});
+  if(navigator.serviceWorker.controller)ask(navigator.serviceWorker.controller);
+  else navigator.serviceWorker.addEventListener('controllerchange',()=>ask(navigator.serviceWorker.controller));
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+}
 })();
