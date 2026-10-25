@@ -28,19 +28,20 @@ const paintVer=()=>{if(VERTEXT)document.querySelectorAll('[data-ver]').forEach(e
 function prevOf(name){for(let i=logs.length-1;i>=0;i--){const it=logs[i].items.find(x=>x.name===name);if(it)return it}return null}
 
 /* ---------- Таймер отдыха ---------- */
-const rest={end:0,pref:150,iv:null};
+const rest={end:0,pref:(p=>[120,150,180].includes(p)?p:150)(ld('fb_rest',150)),iv:null};
 function beep(){try{const a=new (window.AudioContext||window.webkitAudioContext)();[0,.3,.6].forEach(t=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=880;g.gain.value=.15;o.connect(g);g.connect(a.destination);o.start(a.currentTime+t);o.stop(a.currentTime+t+.18)})}catch{}navigator.vibrate?.([200,100,200])}
-function startRest(s){stopRest();rest.pref=s;rest.end=Date.now()+s*1000;rest.iv=setInterval(()=>{if(left()<=0){stopRest();beep();flash()}else paintTimer()},500);paintTimer()}
+function startRest(s){stopRest();rest.pref=s;sv('fb_rest',s);rest.end=Date.now()+s*1000;rest.iv=setInterval(()=>{if(left()<=0){stopRest();beep();flash()}else paintTimer()},500);paintTimer()}
 function stopRest(){clearInterval(rest.iv);rest.iv=null;rest.end=0;paintTimer()}
 const left=()=>Math.max(0,Math.ceil((rest.end-Date.now())/1000));
 function flash(){const t=$('#timer');t.firstElementChild?.classList.add('ring-2','ring-good')}
+const mm=s=>`${(s/60)|0}:${String(s%60).padStart(2,'0')}`;
 function paintTimer(){const t=$('#timer');if(!sess){t.classList.add('hidden');return}t.classList.remove('hidden');
 const run=!!rest.iv,s=left(),pct=run?100*s/rest.pref:0;
-t.innerHTML=`<div class="mx-3 mb-2 md:mx-4 rounded-2xl bg-raise border border-line p-3 flex items-center gap-3 shadow-xl">
-<div class="num text-3xl font-semibold w-20 ${run?'text-accent':'text-mute'}">${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}</div>
-<div class="flex-1">${run?`<div class="h-2 rounded bg-line overflow-hidden"><div class="h-full bg-accent" style="width:${pct}%"></div></div>`:
-`<div class="flex gap-2">${[120,150,180].map(v=>`<button data-act="rest" data-v="${v}" class="${sec} !min-h-[40px] !px-3 text-sm">${v/60|0}:${String(v%60).padStart(2,'0')}</button>`).join('')}</div>`}</div>
-${run?`<button data-act="skip" class="${sec} !min-h-[40px]">Пропустить</button>`:'<span class="text-mute text-sm">Отдых</span>'}</div>`}
+t.innerHTML=`<div class="mx-3 mb-2 md:mx-4 rounded-2xl bg-raise border border-line p-3 shadow-xl">
+${run?`<div class="flex items-center gap-3"><div class="num text-3xl font-semibold text-accent w-20 shrink-0">${mm(s)}</div><div class="flex-1"><div class="h-2 rounded bg-line overflow-hidden"><div class="h-full bg-accent" style="width:${pct}%"></div></div></div><button data-act="skip" class="${sec} !min-h-[40px] shrink-0">Пропустить</button></div>`:
+`<div class="flex items-center justify-between gap-2 mb-2"><span class="text-sm text-mute">Отдых между подходами</span><span class="num text-sm font-medium text-accent shrink-0">${mm(rest.pref)}</span></div>
+<div class="flex gap-2">${[120,150,180].map(v=>`<button data-act="rest" data-v="${v}" class="${v===rest.pref?prim:sec} !min-h-[40px] flex-1 text-sm">${mm(v)}</button>`).join('')}</div>`}
+</div>`}
 
 /* ---------- Экраны ---------- */
 function trainView(){
