@@ -16,7 +16,7 @@ X('Подтягивания обратным или узким нейтраль�
 X('Отжимания от пола с ногами на возвышении','верх груди, трицепс',2,3,10,15),
 X('Подъёмы согнутых ног к груди в висе (до технического отказа)','пресс, кор',2,3,8,15),
 X('Приседания на одной ноге («пистолетики» с опорой)','ноги, стабилизаторы',2,2,8,12)]}});
-const APP_VER='1.5',APP_DATE='25.10.2026';
+const APP_VER='1.6',APP_DATE='25.10.2026';
 let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT=`${APP_VER} · ${APP_DATE}`;
 const HINT='Верхняя граница достигнута! Пора усложнять упражнение или добавлять вес.';
 const fmt=d=>new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
@@ -46,12 +46,12 @@ ${run?`<div class="flex items-center gap-3"><div class="num text-3xl font-semibo
 
 /* ---------- Экраны ---------- */
 function trainView(){
-if(!sess){const last=logs[logs.length-1];
+if(!sess){const last=logs[logs.length-1],d=!last?'A':(last.day==='A'?'B':'A'),pl=plan[d];
 return `<h1 class="text-2xl font-semibold mb-1">Тренировка</h1>
-<p class="text-mute mb-6">${last?`Последняя: ${esc(last.title)}, ${fmt(last.date)}`:'Выберите день, чтобы начать'}</p>
-<div class="grid gap-3 md:grid-cols-2">${['A','B'].map(d=>`<div class="${card}"><div class="text-lg font-medium mb-2">${esc(plan[d].title)}</div>
-<ul class="text-mute text-sm mb-4 space-y-1">${plan[d].ex.map(e=>`<li>${esc(e.name)}</li>`).join('')}</ul>
-<button data-act="start" data-v="${d}" class="${prim} w-full">Начать</button></div>`).join('')}</div>`}
+<p class="text-mute mb-6">${last?`Последняя: ${esc(last.title)}, ${fmt(last.date)}`:'Первое занятие — начинаем с тренировки А'}</p>
+<div class="${card}"><div class="text-lg font-medium mb-2">${esc(pl.title)}</div>
+<ul class="text-mute text-sm mb-4 space-y-1">${pl.ex.map(e=>`<li>${esc(e.name)}</li>`).join('')}</ul>
+<button data-act="start" data-v="${d}" class="${prim} w-full">Начать</button></div>`}
 return `<div class="flex items-center justify-between mb-4"><h1 class="text-2xl font-semibold">${esc(plan[sess.day].title)}</h1>
 <button data-act="cancel" class="text-mute min-h-[48px] px-2">Отменить</button></div>
 <div class="space-y-4">${sess.items.map((it,i)=>{const p=prevOf(it.name);
