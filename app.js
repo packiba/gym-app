@@ -16,8 +16,8 @@ X('Подтягивания обратным или узким нейтраль�
 X('Отжимания от пола с ногами на возвышении','верх груди, трицепс',2,3,10,15),
 X('Подъёмы согнутых ног к груди в висе (до технического отказа)','пресс, кор',2,3,8,15),
 X('Приседания на одной ноге («пистолетики» с опорой)','ноги, стабилизаторы',2,2,8,12)]}});
-const APP_VER='1.6',APP_DATE='25.10.2026';
-let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT=`${APP_VER} · ${APP_DATE}`;
+const APP_VER='1.8',APP_DATE='25.10.2026';
+let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT=`${APP_VER} · ${APP_DATE}`, noAuto=false;
 const HINT='Верхняя граница достигнута! Пора усложнять упражнение или добавлять вес.';
 const fmt=d=>new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
 const card='rounded-2xl bg-panel border border-line p-5';
@@ -27,6 +27,9 @@ const first=it=>it.sets[0]?.reps||0;
 const seq=sets=>sets.map(s=>`${s.reps}${s.fail?'<span class="text-accent">✱</span>':''}`).join(' · ');
 const paintVer=()=>{if(VERTEXT)document.querySelectorAll('[data-ver]').forEach(el=>el.textContent=VERTEXT)};
 function prevOf(name){for(let i=logs.length-1;i>=0;i--){const it=logs[i].items.find(x=>x.name===name);if(it)return it}return null}
+const repHint=(it,j)=>{const p=prevOf(it.name);const b=p?((p.sets[j]||p.sets[p.sets.length-1]||{}).reps||0):0;return b?Math.min(it.max,b+1):it.min};
+function nextDay(){const last=logs[logs.length-1];return !last?'A':(last.day==='A'?'B':'A')}
+function beginSession(){const d=nextDay();sess={day:d,title:plan[d].title,date:new Date().toISOString(),items:plan[d].ex.map(x=>({name:x.name,muscles:x.muscles,smin:x.smin,smax:x.smax,min:x.min,max:x.max,sets:Array.from({length:x.smax},()=>({reps:'',fail:false}))}))};sv('fb_sess',sess)}
 
 /* ---------- Таймер отдыха ---------- */
 const rest={end:0,pref:(p=>[120,150,180].includes(p)?p:150)(ld('fb_rest',150)),iv:null};
@@ -46,9 +49,9 @@ ${run?`<div class="flex items-center gap-3"><div class="num text-3xl font-semibo
 
 /* ---------- Экраны ---------- */
 function trainView(){
-if(!sess){const last=logs[logs.length-1],d=!last?'A':(last.day==='A'?'B':'A'),pl=plan[d];
+if(!sess){const d=nextDay(),pl=plan[d],last=logs[logs.length-1];
 return `<h1 class="text-2xl font-semibold mb-1">Тренировка</h1>
-<p class="text-mute mb-6">${last?`Последняя: ${esc(last.title)}, ${fmt(last.date)}`:'Первое занятие — начинаем с тренировки А'}</p>
+<p class="text-mute mb-6">${last?`Тренировка отменена. Последняя: ${esc(last.title)}, ${fmt(last.date)}`:'Первое занятие — тренировка А'}</p>
 <div class="${card}"><div class="text-lg font-medium mb-2">${esc(pl.title)}</div>
 <ul class="text-mute text-sm mb-4 space-y-1">${pl.ex.map(e=>`<li>${esc(e.name)}</li>`).join('')}</ul>
 <button data-act="start" data-v="${d}" class="${prim} w-full">Начать</button></div>`}
@@ -59,7 +62,7 @@ return `<section class="${card}"><div class="font-medium">${esc(it.name)}</div>
 <div class="text-mute text-sm mb-1">${esc(it.muscles)}</div>
 <div class="text-sm mb-3">${it.smin===it.smax?it.smax:it.smin+'–'+it.smax} подх. × <b>${it.min}–${it.max}</b> повт.${p?` <span class="text-mute">· в прошлый раз ${seq(p.sets)}</span>`:''}</div>
 <div class="space-y-2">${it.sets.map((s,j)=>`<div class="flex items-center gap-3"><span class="text-mute w-6 num">${j+1}</span>
-<input type="number" inputmode="numeric" enterkeyhint="done" min="0" placeholder="повт." data-s="${i}.${j}" value="${s.reps}" class="num">
+<input type="number" inputmode="numeric" enterkeyhint="done" min="0" placeholder="${repHint(it,j)}" data-s="${i}.${j}" value="${s.reps}" class="num">
 <label class="flex items-center gap-2 text-sm text-mute shrink-0 min-h-[48px]"><input type="checkbox" data-f="${i}.${j}" ${s.fail?'checked':''}>отказ</label></div>`).join('')}</div>
 <p id="h${i}" class="mt-3 rounded-lg bg-raise px-3 py-2.5 text-good text-sm ${first(it)>=it.max?'':'hidden'}">${HINT}</p></section>`}).join('')}</div>
 <button data-act="finish" class="${prim} w-full mt-6">Завершить тренировку</button>`}
@@ -102,6 +105,7 @@ ${f(d,i,'name',e.name)}${f(d,i,'muscles',e.muscles)}
 const TABS=[['train','Тренировка'],['diary','Дневник'],['progress','Прогресс'],['plan','План']];
 function render(){
 $('#nav').innerHTML=`<div class="hidden md:block px-4 pb-6 text-lg font-semibold">Fullbody <span data-ver class="text-xs font-normal text-mute align-middle"></span></div>`+TABS.map(([k,l])=>`<button data-act="nav" data-v="${k}" class="flex-1 md:flex-none md:text-left md:px-4 md:h-12 text-sm md:text-base ${view===k?'text-accent border-t-2 md:border-t-0 md:border-l-2 border-accent bg-raise':'text-mute border-t-2 md:border-l-2 border-transparent'}">${l}</button>`).join('');
+if(view==='train'&&!sess&&!noAuto)beginSession();
 $('#app').innerHTML={train:trainView,diary:diaryView,progress:progressView,plan:planView}[view]();paintTimer();paintVer()}
 
 /* ---------- События ---------- */
@@ -112,12 +116,12 @@ document.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-act=
 document.addEventListener('contextmenu',e=>{if(e.target.closest('[data-act="rest"]'))e.preventDefault()});
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,v=t.dataset.v;
 if(a==='nav'){view=v;render();scrollTo(0,0)}
-else if(a==='start'){sess={day:v,title:plan[v].title,date:new Date().toISOString(),items:plan[v].ex.map(x=>({name:x.name,muscles:x.muscles,smin:x.smin,smax:x.smax,min:x.min,max:x.max,sets:Array.from({length:x.smax},()=>({reps:'',fail:false}))}))};sv('fb_sess',sess);render()}
-else if(a==='cancel'){if(confirm('Отменить тренировку? Введённые данные пропадут.')){sess=null;localStorage.removeItem('fb_sess');stopRest();render()}}
+else if(a==='start'){beginSession();render()}
+else if(a==='cancel'){if(confirm('Отменить тренировку? Введённые данные пропадут.')){sess=null;localStorage.removeItem('fb_sess');stopRest();noAuto=true;render()}}
 else if(a==='finish'){const items=sess.items.map(it=>({...it,sets:it.sets.filter(s=>s.reps>0)})).filter(it=>it.sets.length);
 if(!items.length&&!confirm('Нет ни одного подхода. Завершить без записи?'))return;
 if(items.length){logs.push({id:uid(),day:sess.day,title:sess.title,date:sess.date,items});sv('fb_logs',logs)}
-sess=null;localStorage.removeItem('fb_sess');stopRest();view='diary';render()}
+sess=null;localStorage.removeItem('fb_sess');stopRest();noAuto=true;view='diary';render()}
 else if(a==='quit'){window.close();setTimeout(()=>alert('Закрыть приложение можно системным жестом: свайп вверх от нижнего края экрана или кнопка «Домой».'),400)}
 else if(a==='rest'){if(lpF){lpF=false;return}rest.pref=+v;sv('fb_rest',+v);paintTimer()}
 else if(a==='skip')stopRest();
@@ -139,8 +143,16 @@ if(matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches|
 /* Кнопка «Готово» над клавиатурой: убирает цифровую клавиатуру */
 const dn=$('#done'),vv=window.visualViewport,isSet=el=>el&&el.dataset&&el.dataset.s!==undefined;
 const placeDone=()=>{dn.style.bottom=(vv?Math.max(0,innerHeight-vv.height-vv.offsetTop):0)+8+'px'};
-document.addEventListener('focusin',e=>{if(isSet(e.target)){dn.classList.remove('hidden');placeDone()}});
-document.addEventListener('focusout',()=>setTimeout(()=>{if(!isSet(document.activeElement))dn.classList.add('hidden')},60));
+document.addEventListener('focusin',e=>{const el=e.target;if(!isSet(el))return;
+const[i,j]=el.dataset.s.split('.').map(Number),it=sess.items[i],s=it.sets[j];el._auto=false;
+if(!s.reps&&!el.value){const h=repHint(it,j);el.value=h;s.reps=h;sv('fb_sess',sess);$('#h'+i).classList.toggle('hidden',!(first(it)>=it.max));el._auto=true}
+dn.classList.remove('hidden');placeDone()});
+document.addEventListener('input',e=>{const el=e.target;if(!isSet(el))return;el._auto=false;
+if(!el.value){const[i,j]=el.dataset.s.split('.').map(Number);sess.items[i].sets[j].reps='';sv('fb_sess',sess)}});
+document.addEventListener('focusout',e=>{const el=e.target;
+if(isSet(el)&&el._auto){el._auto=false;const[i,j]=el.dataset.s.split('.').map(Number);
+if(sess.items[i].sets[j].reps&&!rest.iv)startRest(rest.pref)}
+setTimeout(()=>{if(!isSet(document.activeElement))dn.classList.add('hidden')},60)});
 vv?.addEventListener('resize',placeDone);vv?.addEventListener('scroll',placeDone);
 dn.addEventListener('pointerdown',e=>{e.preventDefault();document.activeElement?.blur()});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&isSet(e.target)){e.preventDefault();e.target.blur()}});
