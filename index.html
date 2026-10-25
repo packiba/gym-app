@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fullbody — дневник тренировок</title>
+<meta name="theme-color" content="#121417">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config={theme:{extend:{colors:{ink:'#121417',panel:'#1a1d22',raise:'#222630',line:'#2c313a',accent:'#6fa8dc',good:'#7cc4a0',mute:'#8b93a1'}}}}</script>
+<style>
+:root{color-scheme:dark}
+html,body{background:#121417;color:#e6e9ee;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+input,select{background:#222630;border:1px solid #2c313a;border-radius:.6rem;color:inherit;min-height:48px;padding:0 .75rem;width:100%}
+input:focus,select:focus,button:focus-visible{outline:2px solid #6fa8dc;outline-offset:1px}
+input[type=checkbox]{width:28px;height:28px;min-height:0;accent-color:#6fa8dc;padding:0}
+.num{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<nav id="nav" class="fixed z-30 bottom-0 inset-x-0 h-16 flex bg-panel border-t border-line md:inset-y-0 md:right-auto md:w-44 md:h-auto md:flex-col md:border-t-0 md:border-r md:pt-6" style="padding-bottom:env(safe-area-inset-bottom)"></nav>
+<main id="app" class="md:ml-44 max-w-4xl mx-auto px-4 pt-6 pb-48"></main>
+<div id="timer" class="fixed z-20 inset-x-0 bottom-16 md:left-44 md:bottom-0 hidden"></div>
+<script src="app.js"></script>
+</body>
+</html>
