@@ -140,10 +140,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&isSet(e.target)){e.p
 
 render();
 if('serviceWorker' in navigator){
+  const had=!!navigator.serviceWorker.controller;let rl=false;
   navigator.serviceWorker.addEventListener('message',e=>{const m=e.data;if(m?.type==='VERSION'){VERTEXT=`${m.version} · ${m.date}`;paintVer()}});
   const ask=n=>n?.postMessage({type:'GET_VERSION'});
-  if(navigator.serviceWorker.controller)ask(navigator.serviceWorker.controller);
-  else navigator.serviceWorker.addEventListener('controllerchange',()=>ask(navigator.serviceWorker.controller));
-  addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+  if(had)ask(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl&&!sess){rl=true;location.reload()}else ask(navigator.serviceWorker.controller)});
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{r.update();document.addEventListener('visibilitychange',()=>{if(!document.hidden)r.update()})}));
 }
 })();
