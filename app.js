@@ -16,7 +16,8 @@ X('Подтягивания обратным или узким нейтраль�
 X('Отжимания от пола с ногами на возвышении','верх груди, трицепс',2,3,10,15),
 X('Подъёмы согнутых ног к груди в висе (до технического отказа)','пресс, кор',2,3,8,15),
 X('Приседания на одной ноге («пистолетики» с опорой)','ноги, стабилизаторы',2,2,8,12)]}});
-let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT='';
+const APP_VER='1.5',APP_DATE='25.10.2026';
+let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT=`${APP_VER} · ${APP_DATE}`;
 const HINT='Верхняя граница достигнута! Пора усложнять упражнение или добавлять вес.';
 const fmt=d=>new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
 const card='rounded-2xl bg-panel border border-line p-5';
@@ -100,10 +101,15 @@ ${f(d,i,'name',e.name)}${f(d,i,'muscles',e.muscles)}
 
 const TABS=[['train','Тренировка'],['diary','Дневник'],['progress','Прогресс'],['plan','План']];
 function render(){
-$('#nav').innerHTML=`<div class="hidden md:block px-4 pb-6 text-lg font-semibold">Fullbody</div>`+TABS.map(([k,l])=>`<button data-act="nav" data-v="${k}" class="flex-1 md:flex-none md:text-left md:px-4 md:h-12 text-sm md:text-base ${view===k?'text-accent border-t-2 md:border-t-0 md:border-l-2 border-accent bg-raise':'text-mute border-t-2 md:border-l-2 border-transparent'}">${l}</button>`).join('');
+$('#nav').innerHTML=`<div class="hidden md:block px-4 pb-6 text-lg font-semibold">Fullbody <span data-ver class="text-xs font-normal text-mute align-middle"></span></div>`+TABS.map(([k,l])=>`<button data-act="nav" data-v="${k}" class="flex-1 md:flex-none md:text-left md:px-4 md:h-12 text-sm md:text-base ${view===k?'text-accent border-t-2 md:border-t-0 md:border-l-2 border-accent bg-raise':'text-mute border-t-2 md:border-l-2 border-transparent'}">${l}</button>`).join('');
 $('#app').innerHTML={train:trainView,diary:diaryView,progress:progressView,plan:planView}[view]();paintTimer();paintVer()}
 
 /* ---------- События ---------- */
+let lpT=null,lpF=false;
+const lpStop=()=>{clearTimeout(lpT);lpT=null};
+document.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-act="rest"]');if(!b)return lpStop();lpF=false;lpT=setTimeout(()=>{lpF=true;startRest(+b.dataset.v)},500)});
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,lpStop));
+document.addEventListener('contextmenu',e=>{if(e.target.closest('[data-act="rest"]'))e.preventDefault()});
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,v=t.dataset.v;
 if(a==='nav'){view=v;render();scrollTo(0,0)}
 else if(a==='start'){sess={day:v,title:plan[v].title,date:new Date().toISOString(),items:plan[v].ex.map(x=>({name:x.name,muscles:x.muscles,smin:x.smin,smax:x.smax,min:x.min,max:x.max,sets:Array.from({length:x.smax},()=>({reps:'',fail:false}))}))};sv('fb_sess',sess);render()}
@@ -113,7 +119,7 @@ if(!items.length&&!confirm('Нет ни одного подхода. Завер�
 if(items.length){logs.push({id:uid(),day:sess.day,title:sess.title,date:sess.date,items});sv('fb_logs',logs)}
 sess=null;localStorage.removeItem('fb_sess');stopRest();view='diary';render()}
 else if(a==='quit'){window.close();setTimeout(()=>alert('Закрыть приложение можно системным жестом: свайп вверх от нижнего края экрана или кнопка «Домой».'),400)}
-else if(a==='rest')startRest(+v);
+else if(a==='rest'){if(lpF){lpF=false;return}rest.pref=+v;sv('fb_rest',+v);paintTimer()}
 else if(a==='skip')stopRest();
 else if(a==='delLog'){if(confirm('Удалить запись?')){logs=logs.filter(l=>l.id!==v);sv('fb_logs',logs);render()}}
 else if(a==='addEx'){plan[v].ex.push(X('Новое упражнение','',2,3,8,12));sv('fb_plan',plan);render()}
