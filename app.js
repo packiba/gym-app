@@ -19,7 +19,7 @@ X('Приседания на одной ноге («пистолетики» с 
 let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='';
 const HINT='Верхняя граница достигнута! Пора усложнять упражнение или добавлять вес.';
 const fmt=d=>new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
-const card='rounded-2xl bg-panel border border-line p-4';
+const card='rounded-2xl bg-panel border border-line p-5';
 const btn='min-h-[48px] px-4 rounded-xl font-medium active:scale-[.98] transition';
 const prim=btn+' bg-accent text-ink', sec=btn+' bg-raise border border-line';
 const first=it=>it.sets[0]?.reps||0;
@@ -56,9 +56,9 @@ return `<section class="${card}"><div class="font-medium">${esc(it.name)}</div>
 <div class="text-mute text-sm mb-1">${esc(it.muscles)}</div>
 <div class="text-sm mb-3">${it.smin===it.smax?it.smax:it.smin+'–'+it.smax} подх. × <b>${it.min}–${it.max}</b> повт.${p?` <span class="text-mute">· в прошлый раз ${seq(p.sets)}</span>`:''}</div>
 <div class="space-y-2">${it.sets.map((s,j)=>`<div class="flex items-center gap-3"><span class="text-mute w-6 num">${j+1}</span>
-<input type="number" inputmode="numeric" min="0" placeholder="повт." data-s="${i}.${j}" value="${s.reps}" class="num">
+<input type="number" inputmode="numeric" enterkeyhint="done" min="0" placeholder="повт." data-s="${i}.${j}" value="${s.reps}" class="num">
 <label class="flex items-center gap-2 text-sm text-mute shrink-0 min-h-[48px]"><input type="checkbox" data-f="${i}.${j}" ${s.fail?'checked':''}>отказ</label></div>`).join('')}</div>
-<p id="h${i}" class="mt-3 text-good text-sm ${first(it)>=it.max?'':'hidden'}">${HINT}</p></section>`}).join('')}</div>
+<p id="h${i}" class="mt-3 rounded-lg bg-raise px-3 py-2.5 text-good text-sm ${first(it)>=it.max?'':'hidden'}">${HINT}</p></section>`}).join('')}</div>
 <button data-act="finish" class="${prim} w-full mt-6">Завершить тренировку</button>`}
 
 function diaryView(){
@@ -66,8 +66,8 @@ if(!logs.length)return `<h1 class="text-2xl font-semibold mb-2">Дневник</
 return `<h1 class="text-2xl font-semibold mb-4">Дневник</h1><div class="space-y-4">${[...logs].reverse().map(l=>`<section class="${card}">
 <div class="flex justify-between items-start mb-3"><div><div class="font-medium">${esc(l.title)}</div><div class="text-mute text-sm">${fmt(l.date)}</div></div>
 <button data-act="delLog" data-v="${l.id}" class="text-mute min-h-[48px] px-2 text-sm">Удалить</button></div>
-<div class="divide-y divide-line">${l.items.map(it=>`<div class="py-2"><div class="text-sm">${esc(it.name)}</div>
-<div class="num text-lg">${seq(it.sets)}</div>${first(it)>=it.max?`<div class="text-good text-sm">${HINT}</div>`:''}</div>`).join('')}</div></section>`).join('')}</div>`}
+<div class="divide-y divide-line">${l.items.map(it=>`<div class="py-3"><div class="text-sm">${esc(it.name)}</div>
+<div class="num text-lg">${seq(it.sets)}</div>${first(it)>=it.max?`<div class="mt-2 rounded-lg bg-raise px-3 py-2.5 text-good text-sm">${HINT}</div>`:''}</div>`).join('')}</div></section>`).join('')}</div>`}
 
 function chart(pts){if(pts.length<2)return'';const W=300,H=90,mx=Math.max(...pts),mn=Math.min(...pts),r=mx-mn||1;
 const c=pts.map((v,i)=>`${(i/(pts.length-1)*W).toFixed(1)},${(H-8-(v-mn)/r*(H-16)).toFixed(1)}`).join(' ');
@@ -80,8 +80,8 @@ const rows=logs.map(l=>({d:l.date,it:l.items.find(i=>i.name===pick)})).filter(r=
 return `<h1 class="text-2xl font-semibold mb-4">Прогресс</h1>
 <select data-pick class="mb-4">${names.map(n=>`<option ${n===pick?'selected':''}>${esc(n)}</option>`).join('')}</select>
 ${rows.length?`<div class="${card} mb-4"><div class="text-mute text-sm mb-1">Повторения в первом подходе</div>${chart(rows.map(r=>first(r.it)))}</div>
-<div class="${card}"><table class="w-full text-left num"><thead class="text-mute text-sm"><tr><th class="pb-2 font-normal">Дата</th><th class="pb-2 font-normal">Подходы</th><th class="pb-2 font-normal text-right">1-й</th></tr></thead>
-<tbody class="divide-y divide-line">${[...rows].reverse().map(r=>`<tr><td class="py-2">${fmt(r.d)}</td><td>${seq(r.it.sets)}</td><td class="text-right ${first(r.it)>=r.it.max?'text-good':''}">${first(r.it)}</td></tr>`).join('')}</tbody></table></div>`
+<div class="${card} !p-2 overflow-x-auto"><table class="w-full text-left num"><thead class="text-mute text-sm"><tr><th class="px-3 py-2 font-normal">Дата</th><th class="px-3 py-2 font-normal">Подходы</th><th class="px-3 py-2 font-normal text-right">1-й</th></tr></thead>
+<tbody class="divide-y divide-line">${[...rows].reverse().map(r=>`<tr><td class="px-3 py-3">${fmt(r.d)}</td><td class="px-3 py-3">${seq(r.it.sets)}</td><td class="px-3 py-3 text-right ${first(r.it)>=r.it.max?'text-good':''}">${first(r.it)}</td></tr>`).join('')}</tbody></table></div>`
 :'<p class="text-mute">По этому упражнению ещё нет записей.</p>'}`}
 
 function planView(){
@@ -109,6 +109,7 @@ else if(a==='finish'){const items=sess.items.map(it=>({...it,sets:it.sets.filter
 if(!items.length&&!confirm('Нет ни одного подхода. Завершить без записи?'))return;
 if(items.length){logs.push({id:uid(),day:sess.day,title:sess.title,date:sess.date,items});sv('fb_logs',logs)}
 sess=null;localStorage.removeItem('fb_sess');stopRest();view='diary';render()}
+else if(a==='quit'){window.close();setTimeout(()=>alert('Закрыть приложение можно системным жестом: свайп вверх от нижнего края экрана или кнопка «Домой».'),400)}
 else if(a==='rest')startRest(+v);
 else if(a==='skip')stopRest();
 else if(a==='delLog'){if(confirm('Удалить запись?')){logs=logs.filter(l=>l.id!==v);sv('fb_logs',logs);render()}}
@@ -123,6 +124,17 @@ $('#h'+i).classList.toggle('hidden',!(first(sess.items[i])>=sess.items[i].max));
 else if(t.dataset.f){const[i,j]=t.dataset.f.split('.').map(Number);sess.items[i].sets[j].fail=t.checked;sv('fb_sess',sess)}
 else if(t.dataset.p){const[d,i,k]=t.dataset.p.split('.');plan[d].ex[+i][k]=t.type==='number'?Math.max(1,parseInt(t.value)||1):t.value;sv('fb_plan',plan)}
 else if('pick' in t.dataset){pick=t.value;render()}});
+
+if(matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches||navigator.standalone)document.documentElement.classList.add('app-mode');
+
+/* Кнопка «Готово» над клавиатурой: убирает цифровую клавиатуру */
+const dn=$('#done'),vv=window.visualViewport,isSet=el=>el&&el.dataset&&el.dataset.s!==undefined;
+const placeDone=()=>{dn.style.bottom=(vv?Math.max(0,innerHeight-vv.height-vv.offsetTop):0)+8+'px'};
+document.addEventListener('focusin',e=>{if(isSet(e.target)){dn.classList.remove('hidden');placeDone()}});
+document.addEventListener('focusout',()=>setTimeout(()=>{if(!isSet(document.activeElement))dn.classList.add('hidden')},60));
+vv?.addEventListener('resize',placeDone);vv?.addEventListener('scroll',placeDone);
+dn.addEventListener('pointerdown',e=>{e.preventDefault();document.activeElement?.blur()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&isSet(e.target)){e.preventDefault();e.target.blur()}});
 
 render();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));

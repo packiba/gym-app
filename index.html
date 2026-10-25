@@ -19,12 +19,17 @@ input,select{background:#222630;border:1px solid #2c313a;border-radius:.6rem;col
 input:focus,select:focus,button:focus-visible{outline:2px solid #6fa8dc;outline-offset:1px}
 input[type=checkbox]{width:28px;height:28px;min-height:0;accent-color:#6fa8dc;padding:0}
 .num{font-variant-numeric:tabular-nums}
+#top{display:none}
+.app-mode #top{display:flex}
+.app-mode main{padding-top:calc(env(safe-area-inset-top,0px) + 4.5rem)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
+<header id="top" class="fixed z-30 top-0 left-0 right-0 md:left-44 items-center justify-between pl-5 pr-2 bg-ink border-b border-line" style="height:calc(48px + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px)"><span class="font-semibold">Fullbody</span><button data-act="quit" aria-label="Закрыть приложение" class="w-12 h-12 grid place-items-center text-2xl text-mute">✕</button></header>
 <nav id="nav" class="fixed z-30 bottom-0 inset-x-0 h-16 flex bg-panel border-t border-line md:inset-y-0 md:right-auto md:w-44 md:h-auto md:flex-col md:border-t-0 md:border-r md:pt-6" style="padding-bottom:env(safe-area-inset-bottom)"></nav>
 <main id="app" class="md:ml-44 max-w-4xl mx-auto px-4 pt-6 pb-48"></main>
+<button id="done" class="hidden fixed z-40 right-3 min-h-[44px] px-5 rounded-xl bg-accent text-ink font-medium shadow-xl">Готово</button>
 <div id="timer" class="fixed z-20 inset-x-0 bottom-16 md:left-44 md:bottom-0 hidden"></div>
 <script src="app.js"></script>
 </body>
