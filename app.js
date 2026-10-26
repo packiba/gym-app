@@ -16,7 +16,7 @@ X('Подтягивания обратным или узким нейтраль�
 X('Отжимания от пола с ногами на возвышении','верх груди, трицепс',2,3,10,15),
 X('Подъёмы согнутых ног к груди в висе (до технического отказа)','пресс, кор',2,3,8,15),
 X('Приседания на одной ноге («пистолетики» с опорой)','ноги, стабилизаторы',2,2,8,12)]}});
-const APP_VER='1.11',APP_DATE='26.10.2026';
+const APP_VER='1.12',APP_DATE='26.10.2026';
 let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT=`${APP_VER} · ${APP_DATE}`;
 const HINT='Верхняя граница достигнута! Пора усложнять упражнение или добавлять вес.';
 const fmt=d=>new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
@@ -38,19 +38,19 @@ function startRest(s){stopRest();rest.pref=s;sv('fb_rest',s);rest.end=Date.now()
 function stopRest(){clearInterval(rest.iv);rest.iv=null;rest.end=0;paintTimer()}
 const left=()=>Math.max(0,Math.ceil((rest.end-Date.now())/1000));
 const mm=s=>`${(s/60)|0}:${String(s%60).padStart(2,'0')}`;
-function paintTimer(){const t=$('#timer');if(!sess){t.classList.add('hidden');return}t.classList.remove('hidden');
+function paintTimer(){const t=$('#timer');if(!sess||view!=='train'){t.classList.add('hidden');return}t.classList.remove('hidden');
 const run=!!rest.iv,s=left(),pct=run?100*s/rest.pref:0;
-t.innerHTML=`<div class="mx-3 mb-2 md:mx-auto md:max-w-[36rem] rounded-2xl bg-raise border border-line p-3 shadow-xl text-center">
-${run?`<div class="flex items-center gap-3"><div class="num text-3xl font-semibold text-accent w-20 shrink-0 text-center">${mm(s)}</div><div class="flex-1"><div class="h-2 rounded bg-line overflow-hidden"><div class="h-full bg-accent" style="width:${pct}%"></div></div></div><button data-act="skip" class="${sec} !min-h-[40px] shrink-0">Пропустить</button></div>`:
-`<div class="text-sm text-mute mb-2">Отдых между подходами</div>
-<div class="flex gap-2">${[120,150,180].map(v=>`<button data-act="rest" data-v="${v}" class="${v===rest.pref?prim:sec} !min-h-[40px] flex-1 text-sm">${mm(v)}</button>`).join('')}</div>`}
+t.innerHTML=`<div class="mx-auto w-full max-w-[36rem] min-h-[5.25rem] px-4 py-3 flex items-center justify-center text-center">
+${run?`<div class="flex w-full items-center gap-3"><div class="num text-3xl font-semibold text-accent w-20 shrink-0 text-center">${mm(s)}</div><div class="flex-1"><div class="h-2 rounded bg-line overflow-hidden"><div class="h-full bg-accent" style="width:${pct}%"></div></div></div><button data-act="skip" class="${sec} !min-h-[40px] shrink-0">Пропустить</button></div>`:
+`<div class="w-full"><div class="text-sm text-mute mb-2">Отдых между подходами</div>
+<div class="flex gap-2">${[120,150,180].map(v=>`<button data-act="rest" data-v="${v}" class="${v===rest.pref?prim:sec} !min-h-[40px] flex-1 text-sm">${mm(v)}</button>`).join('')}</div></div>`}
 </div>`}
 
 /* ---------- Экраны ---------- */
 const head=(t,r='',mb='mb-4')=>`<div class="grid grid-cols-[1fr_auto_1fr] items-center ${mb}"><span></span><h1 class="text-2xl font-semibold">${t}</h1><div class="justify-self-end">${r}</div></div>`;
 function trainView(){
 return `${head(esc(plan[sess.day].title),'<button data-act="cancel" class="text-mute text-sm min-h-[48px] px-1">Сбросить</button>','mb-1')}
-<p class="text-mute text-sm mb-4">Удерживайте кружок — засчитается число из подсказки. Потяните вправо или влево — изменить число: чем дальше от точки касания, тем быстрее.</p>
+<p class="text-mute text-sm mb-4">Удерживайте кружок — засчитается подсказка. Вправо или влево — изменить число (чем дальше от точки касания, тем быстрее). Вниз — «до отказа», вверх — снять отказ.</p>
 <div class="space-y-4">${sess.items.map((it,i)=>{const p=prevOf(it.name);
 return `<section class="${card} !p-4"><div class="font-medium">${esc(it.name)}</div>
 <div class="text-mute text-sm mb-1">${esc(it.muscles)}</div>
@@ -58,7 +58,7 @@ return `<section class="${card} !p-4"><div class="font-medium">${esc(it.name)}</
 <div class="grid gap-2 items-start" style="grid-template-columns:repeat(${Math.min(it.sets.length,4)},minmax(0,1fr))">${it.sets.map((s,j)=>`<div class="flex flex-col items-center">
 <div class="text-xs text-mute mb-2">Подход ${j+1}</div>
 <div class="rep ${s.reps?'done':''} ${s.fail?'fail':''}" data-rep="${i}.${j}" role="slider" tabindex="0" aria-label="Повторения, подход ${j+1}" aria-valuemin="0" aria-valuenow="${s.reps||0}"><span class="rep-fill"></span><span class="rep-val num">${s.reps||repHint(it,j)}</span></div>
-<button type="button" data-act="fail" data-v="${i}.${j}" aria-pressed="${!!s.fail}" class="failbtn mt-2 ${s.fail?'on':''}">до отказа</button></div>`).join('')}</div>
+<div class="failtxt ${s.fail?'on':''}" data-fl="${i}.${j}">${s.fail?'до отказа':'подход без отказа'}</div></div>`).join('')}</div>
 <p id="h${i}" class="mt-3 rounded-lg bg-raise px-3 py-2.5 text-good text-sm ${first(it)>=it.max?'':'hidden'}">${HINT}</p></section>`}).join('')}</div>
 <button data-act="finish" class="${prim} w-full mt-6">Завершить тренировку</button>`}
 
@@ -86,12 +86,14 @@ ${rows.length?`<div class="${card} mb-4"><div class="text-mute text-sm mb-1">П�
 :'<p class="text-mute">По этому упражнению ещё нет записей.</p>'}`}
 
 function planView(){
-const f=(d,i,k,v,t='text')=>`<input data-p="${d}.${i}.${k}" type="${t}" ${t==='number'?'inputmode="numeric" min="1"':''} value="${esc(v)}" class="num">`;
+const f=(d,i,k,v)=>`<input data-p="${d}.${i}.${k}" type="text" value="${esc(v)}">`;
+const nc=(d,i,k,v)=>`<div class="numcell" data-num="${d}.${i}.${k}" role="slider" tabindex="0" aria-valuenow="${v}"><span class="nv num">${v}</span></div>`;
+const rng=(t,d,i,a,b,e)=>`<div><div class="text-sm text-mute mb-2">${t}</div><div class="flex items-center justify-center gap-3">${nc(d,i,a,e[a])}<span class="text-mute">—</span>${nc(d,i,b,e[b])}</div></div>`;
 return `<h1 class="text-2xl font-semibold mb-4">План</h1>
 ${['A','B'].map(d=>`<section class="${card} mb-4"><div class="font-medium mb-3">${esc(plan[d].title)}</div><div class="space-y-4">
 ${plan[d].ex.map((e,i)=>`<div class="space-y-2 pb-4 border-b border-line last:border-0 last:pb-0">
 ${f(d,i,'name',e.name)}${f(d,i,'muscles',e.muscles)}
-<div class="grid grid-cols-4 gap-2 text-xs text-mute"><label>Подх. от${f(d,i,'smin',e.smin,'number')}</label><label>до${f(d,i,'smax',e.smax,'number')}</label><label>Повт. от${f(d,i,'min',e.min,'number')}</label><label>до${f(d,i,'max',e.max,'number')}</label></div>
+<div class="space-y-4 py-2">${rng('Подходы',d,i,'smin','smax',e)}${rng('Повторения',d,i,'min','max',e)}</div>
 <button data-act="delEx" data-v="${d}.${i}" class="text-mute text-sm min-h-[40px]">Удалить упражнение</button></div>`).join('')}</div>
 <button data-act="addEx" data-v="${d}" class="${sec} w-full mt-4">Добавить упражнение</button></section>`).join('')}
 <div class="flex gap-3"><button data-act="export" class="${sec} flex-1">Экспорт данных</button><button data-act="reset" class="${sec} flex-1">Сбросить план</button></div>
@@ -108,18 +110,16 @@ let lpT=null,lpF=false;
 const lpStop=()=>{clearTimeout(lpT);lpT=null};
 document.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-act="rest"]');if(!b)return lpStop();lpF=false;lpT=setTimeout(()=>{lpF=true;startRest(+b.dataset.v)},500)});
 ['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,lpStop));
-document.addEventListener('contextmenu',e=>{if(e.target.closest('[data-act="rest"],.rep'))e.preventDefault()});
+document.addEventListener('contextmenu',e=>{if(e.target.closest('[data-act="rest"],.rep,.numcell'))e.preventDefault()});
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,v=t.dataset.v;
-if(a==='nav'){view=v;render();scrollTo(0,0)}
+if(a==='nav'){view=v;render();$('#app').scrollTop=0}
 else if(a==='cancel'){if(confirm('Сбросить тренировку? Введённые данные пропадут.')){sess=null;localStorage.removeItem('fb_sess');stopRest();render()}}
 else if(a==='finish'){const items=sess.items.map(it=>({...it,sets:it.sets.filter(s=>s.reps>0)})).filter(it=>it.sets.length);
 if(!items.length&&!confirm('Нет ни одного подхода. Завершить без записи?'))return;
 if(items.length){logs.push({id:uid(),day:sess.day,title:sess.title,date:sess.date,items});sv('fb_logs',logs)}
-sess=null;localStorage.removeItem('fb_sess');stopRest();view='diary';render()}
+sess=null;localStorage.removeItem('fb_sess');stopRest();view='diary';render();$('#app').scrollTop=0}
 else if(a==='quit'){window.close();setTimeout(()=>alert('Закрыть приложение можно системным жестом: свайп вверх от нижнего края экрана или кнопка «Домой».'),400)}
 else if(a==='rest'){if(lpF){lpF=false;return}rest.pref=+v;sv('fb_rest',+v);paintTimer()}
-else if(a==='fail'){const[i,j]=v.split('.').map(Number),s=sess.items[i].sets[j];s.fail=!s.fail;sv('fb_sess',sess);
-t.classList.toggle('on',s.fail);t.setAttribute('aria-pressed',s.fail);repEl(i,j)?.classList.toggle('fail',s.fail)}
 else if(a==='skip')stopRest();
 else if(a==='delLog'){if(confirm('Удалить запись?')){logs=logs.filter(l=>l.id!==v);sv('fb_logs',logs);render()}}
 else if(a==='addEx'){plan[v].ex.push(X('Новое упражнение','',2,3,8,12));sv('fb_plan',plan);render()}
@@ -128,54 +128,75 @@ else if(a==='reset'){if(confirm('Вернуть стартовую програ�
 else if(a==='export'){const b=new Blob([JSON.stringify({plan,logs},null,1)],{type:'application/json'}),u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='fullbody-backup.json';l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}});
 
 document.addEventListener('change',e=>{const t=e.target;
-if(t.dataset.p){const[d,i,k]=t.dataset.p.split('.');plan[d].ex[+i][k]=t.type==='number'?Math.max(1,parseInt(t.value)||1):t.value;sv('fb_plan',plan)}
+if(t.dataset.p){const[d,i,k]=t.dataset.p.split('.');plan[d].ex[+i][k]=t.value;sv('fb_plan',plan)}
 else if('pick' in t.dataset){pick=t.value;render()}});
 
 if(matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches||navigator.standalone)document.documentElement.classList.add('app-mode');
 
-/* ---------- Ввод повторений без клавиатуры ----------
-   удержание на поле = засчитать число из подсказки; потянуть вправо/влево = изменить число */
-const HOLD_MS=670,MOVE_PX=10,MAXREP=99;           // удержание ≈0,67 с (было 2 с); мёртвая зона свайпа
-const rateOf=d=>Math.min(30,1+Math.pow(d/20,1.5)); // повторов/сек в зависимости от смещения d (px) от точки касания
+/* ---------- Управление числами без клавиатуры ----------
+   Тренировка: удержание = засчитать подсказку; вправо/влево = изменить число (скорость растёт со смещением);
+               вниз = «до отказа», вверх = снять отказ.
+   План: вправо/влево = изменить границу, при отпускании значение сохраняется. */
+const HOLD_MS=670,MOVE_PX=10,SWIPE_PX=40,MAXREP=99;
+const rateOf=d=>Math.min(30,1+Math.pow(d/20,1.5)); // изменений/сек в зависимости от смещения d (px) от точки касания
 document.documentElement.style.setProperty('--hold',HOLD_MS+'ms');
 const vib=(()=>{let t=0;return ms=>{const n=Date.now();if(n-t<45)return;t=n;navigator.vibrate?.(ms)}})();
 const TICK_VIB=20,DONE_VIB=70;                      // щелчок при смене числа / длинная вибрация при «выполнено»
 const repEl=(i,j)=>document.querySelector(`[data-rep="${i}.${j}"]`);
+const flEl=(i,j)=>document.querySelector(`[data-fl="${i}.${j}"]`);
 function paintSet(i,j){const it=sess.items[i],s=it.sets[j],el=repEl(i,j);if(!el)return;
 el.classList.toggle('done',!!s.reps);el.setAttribute('aria-valuenow',s.reps||0);el.querySelector('.rep-val').textContent=s.reps||repHint(it,j);
 $('#h'+i).classList.toggle('hidden',!(first(it)>=it.max))}
-function setReps(i,j,v){sess.items[i].sets[j].reps=v>0?v:'';sv('fb_sess',sess);paintSet(i,j)}
+function setFail(i,j,on){const s=sess.items[i].sets[j];s.fail=!!on;sv('fb_sess',sess);repEl(i,j)?.classList.toggle('fail',!!on);
+const f=flEl(i,j);if(f){f.classList.toggle('on',!!on);f.textContent=on?'до отказа':'подход без отказа'}}
+function setReps(i,j,v){const s=sess.items[i].sets[j];s.reps=v>0?v:'';if(!s.reps&&s.fail)setFail(i,j,false);else sv('fb_sess',sess);paintSet(i,j)}
+function paintNum(d,i){const e=plan[d].ex[i];['smin','smax','min','max'].forEach(k=>{const el=document.querySelector(`[data-num="${d}.${i}.${k}"]`);
+if(el){el.querySelector('.nv').textContent=e[k];el.setAttribute('aria-valuenow',e[k])}})}
 const bump=(el,c)=>{el.classList.remove(c);void el.offsetWidth;el.classList.add(c)};
+/* адаптер: что именно крутит жест — подход на тренировке или граница в плане */
+function adapt(el){
+if(el.dataset.rep){if(!sess)return null;const[i,j]=el.dataset.rep.split('.').map(Number),it=sess.items[i],s=it.sets[j],hint=()=>repHint(it,j);
+return{lo:0,hi:MAXREP,vert:true,val:el.querySelector('.rep-val'),holdable:()=>!s.reps,isFail:()=>!!s.fail,
+get:()=>s.reps||hint(),set:v=>setReps(i,j,v),
+hold(){const v=hint();setReps(i,j,v);navigator.vibrate?.(DONE_VIB);startRest(rest.pref);return v},
+swipe(down){if(down){if(!s.reps){setReps(i,j,hint());startRest(rest.pref)}setFail(i,j,true);navigator.vibrate?.([50,40,50])}
+else if(s.fail){setFail(i,j,false);navigator.vibrate?.(30)}},
+end(drag){if(drag&&s.reps)startRest(rest.pref)}}}
+const[d,n,k]=el.dataset.num.split('.'),i=+n,e=plan[d].ex[i],pair={smin:['smax',1],smax:['smin',-1],min:['max',1],max:['min',-1]}[k];
+return{lo:1,hi:k[0]==='s'?20:MAXREP,vert:false,val:el.querySelector('.nv'),get:()=>e[k],
+set:v=>{e[k]=v;const[o,sg]=pair;if((v-e[o])*sg>0)e[o]=v;paintNum(d,i)},end(){sv('fb_plan',plan)}}}
 let g=null;
 const endHold=()=>{if(g?.hold){clearTimeout(g.hold);g.hold=null}g?.el.classList.remove('holding')};
-function step(k,sg){const v=Math.max(0,Math.min(MAXREP,k.cur+sg));if(v===k.cur)return;k.cur=v;setReps(k.i,k.j,v);bump(k.el.querySelector('.rep-val'),'tick');vib(TICK_VIB)}
-/* пока палец тянется, число меняется со скоростью, растущей вместе со смещением от точки касания */
-function loop(t){if(!g||!g.drag)return;const dt=Math.min(.05,(t-g.t)/1000);g.t=t;
+function step(k,sg){const v=Math.max(k.tg.lo,Math.min(k.tg.hi,k.cur+sg));if(v===k.cur)return;k.cur=v;k.tg.set(v);bump(k.tg.val,'tick');vib(TICK_VIB)}
+function loop(t){if(!g||g.axis!=='h')return;const dt=Math.min(.05,(t-g.tm)/1000);g.tm=t;
 const dx=g.lx-g.x,d=Math.abs(dx)-MOVE_PX;
 if(d>0){const sg=Math.sign(dx);if(sg!==g.sg){g.sg=sg;g.acc=.5}
 g.acc+=rateOf(d)*dt;while(g.acc>=1){g.acc-=1;step(g,sg)}}
 else{g.sg=0;g.acc=0}
 requestAnimationFrame(loop)}
-document.addEventListener('pointerdown',e=>{const el=e.target.closest('.rep');if(!el||!sess||g)return;if(e.pointerType==='mouse'&&e.button)return;
-const[i,j]=el.dataset.rep.split('.').map(Number),it=sess.items[i],s=it.sets[j];
-g={el,i,j,id:e.pointerId,x:e.clientX,lx:e.clientX,cur:s.reps||repHint(it,j),drag:false,hold:null,sg:0,acc:0,t:0};
+document.addEventListener('pointerdown',e=>{const el=e.target.closest('.rep,.numcell');if(!el||g)return;if(e.pointerType==='mouse'&&e.button)return;
+const tg=adapt(el);if(!tg)return;
+g={el,tg,id:e.pointerId,x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY,cur:tg.get(),axis:'',hold:null,sg:0,acc:0,tm:0,acted:false};
 try{el.setPointerCapture(e.pointerId)}catch{}
-if(!s.reps){el.classList.add('holding');
-g.hold=setTimeout(()=>{const k=g;if(!k)return;k.hold=null;el.classList.remove('holding');
-const v=repHint(it,j);setReps(i,j,v);k.cur=v;k.x=k.lx;navigator.vibrate?.(DONE_VIB);bump(el,'pop');startRest(rest.pref)},HOLD_MS)}});
-document.addEventListener('pointermove',e=>{if(!g||e.pointerId!==g.id)return;g.lx=e.clientX;
-if(g.drag)return;const dx=g.lx-g.x;if(Math.abs(dx)<MOVE_PX)return;
-g.drag=true;endHold();g.el.classList.add('drag');g.sg=Math.sign(dx);g.acc=0;step(g,g.sg);g.t=performance.now();requestAnimationFrame(loop)});
-document.addEventListener('pointerup',e=>{if(!g||e.pointerId!==g.id)return;endHold();g.el.classList.remove('drag');
-const{i,j,drag}=g;g=null;if(drag&&sess.items[i].sets[j].reps)startRest(rest.pref)});
-document.addEventListener('pointercancel',e=>{if(!g||e.pointerId!==g.id)return;endHold();g.el.classList.remove('drag');g=null});
-/* клавиатура (для компьютера): стрелки меняют число, Enter/пробел — засчитать подсказку */
-document.addEventListener('keydown',e=>{const el=e.target.closest?.('.rep');if(!el||!sess)return;
-const[i,j]=el.dataset.rep.split('.').map(Number),it=sess.items[i],s=it.sets[j],b=s.reps||repHint(it,j);let v=null;
-if(e.key==='Enter'||e.key===' ')v=b;
-else if(e.key==='ArrowRight'||e.key==='ArrowUp')v=Math.min(MAXREP,s.reps?b+1:b);
-else if(e.key==='ArrowLeft'||e.key==='ArrowDown')v=s.reps?b-1:0;
-if(v===null)return;e.preventDefault();setReps(i,j,v);if(v>0){startRest(rest.pref);if(!s.reps)navigator.vibrate?.(DONE_VIB)}});
+if(tg.holdable?.()){el.classList.add('holding');
+g.hold=setTimeout(()=>{const k=g;if(!k)return;k.hold=null;el.classList.remove('holding');k.cur=tg.hold();k.x=k.lx;k.y=k.ly;bump(el,'pop')},HOLD_MS)}});
+document.addEventListener('pointermove',e=>{if(!g||e.pointerId!==g.id)return;g.lx=e.clientX;g.ly=e.clientY;const dx=g.lx-g.x,dy=g.ly-g.y;
+if(!g.axis){if(Math.max(Math.abs(dx),Math.abs(dy))<MOVE_PX)return;
+g.axis=g.tg.vert&&Math.abs(dy)>Math.abs(dx)?'v':'h';endHold();g.el.classList.add('drag');
+if(g.axis==='h'){g.sg=Math.sign(dx)||1;g.acc=0;step(g,g.sg);g.tm=performance.now();requestAnimationFrame(loop)}}
+if(g.axis==='v'&&!g.acted&&Math.abs(dy)>=SWIPE_PX){g.acted=true;g.tg.swipe(dy>0);g.cur=g.tg.get()}});
+document.addEventListener('pointerup',e=>{if(!g||e.pointerId!==g.id)return;endHold();const{el,tg,axis}=g;el.classList.remove('drag');g=null;tg.end?.(axis==='h')});
+document.addEventListener('pointercancel',e=>{if(!g||e.pointerId!==g.id)return;endHold();const{el,tg}=g;el.classList.remove('drag');g=null;tg.end?.(false)});
+/* клавиатура (для компьютера): стрелки — число, Enter/пробел — засчитать подсказку, F — «до отказа» */
+document.addEventListener('keydown',e=>{const el=e.target.closest?.('.rep,.numcell');if(!el)return;const tg=adapt(el);if(!tg)return;const k=e.key;
+if(tg.vert){const und=tg.holdable(),b=tg.get();let v=null;
+if(k==='Enter'||k===' ')v=b;
+else if(k==='ArrowRight'||k==='ArrowUp')v=Math.min(tg.hi,und?b:b+1);
+else if(k==='ArrowLeft'||k==='ArrowDown')v=und?0:b-1;
+else if(k==='f'||k==='F'){e.preventDefault();tg.swipe(!tg.isFail());return}
+if(v===null)return;e.preventDefault();tg.set(v);if(v>0){startRest(rest.pref);if(und)navigator.vibrate?.(DONE_VIB)}}
+else{const dl=(k==='ArrowRight'||k==='ArrowUp')?1:(k==='ArrowLeft'||k==='ArrowDown')?-1:0;if(!dl)return;e.preventDefault();
+tg.set(Math.max(tg.lo,Math.min(tg.hi,tg.get()+dl)));tg.end()}});
 
 render();
 if('serviceWorker' in navigator){

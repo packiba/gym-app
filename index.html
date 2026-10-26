@@ -20,10 +20,10 @@ html,body{background:#121417;color:#e6e9ee;font-family:system-ui,-apple-system,"
 body input:not([type=checkbox]),body select{background:#222630;border:1px solid #2c313a;border-radius:.6rem;color:inherit;min-height:48px;padding:.625rem .875rem;width:100%;text-align:center}
 body select{text-align-last:center}
 body input::placeholder{color:#8b93a1;opacity:1}
-input:focus,select:focus,button:focus-visible,.rep:focus-visible{outline:2px solid #6fa8dc;outline-offset:1px}
+input:focus,select:focus,button:focus-visible,.rep:focus-visible,.numcell:focus-visible{outline:2px solid #6fa8dc;outline-offset:1px}
 /* Поле повторений: не input, клавиатура не нужна */
 .rep{position:relative;overflow:hidden;width:min(100%,84px);aspect-ratio:1;display:grid;place-items:center;border-radius:50%;background:#222630;border:1.5px dashed #3a4150;
- touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab;transition:border-color .2s,background .2s}
+ touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab;transition:border-color .2s,background .2s}
 .rep::before,.rep::after{position:absolute;top:50%;transform:translateY(-50%);font-size:1.25rem;line-height:1;color:#8b93a1;opacity:.35;z-index:1}
 .rep::before{content:'‹';left:8px}.rep::after{content:'›';right:8px}
 .rep-val{position:relative;z-index:1;font-size:1.9rem;font-weight:600;color:#8b93a1;transition:color .2s}
@@ -38,8 +38,8 @@ input:focus,select:focus,button:focus-visible,.rep:focus-visible{outline:2px sol
 .tick{animation:tick .18s ease-out}
 @keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.07);box-shadow:0 0 0 7px rgba(124,196,160,.35)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(124,196,160,0)}}
 @keyframes tick{0%{transform:scale(1.28)}100%{transform:scale(1)}}
-.failbtn{min-height:40px;padding:0 .8rem;border-radius:9999px;background:#222630;border:1px solid #2c313a;color:#8b93a1;font-size:.75rem;white-space:nowrap;transition:background .2s,border-color .2s,color .2s}
-.failbtn.on{background:rgba(224,112,108,.16);border-color:#e0706c;color:#ee8f8b}
+.failtxt{display:flex;align-items:center;justify-content:center;min-height:2.3em;margin-top:.5rem;max-width:100%;font-size:.6875rem;line-height:1.15;text-align:center;color:#8b93a1;transition:color .2s}
+.failtxt.on{color:#e6e9ee}
 .rep.fail .rep-val{color:#e5726e}
 .rep.fail:not(.done) .rep-val{opacity:.6}
 @media (prefers-reduced-motion:reduce){.rep.holding .rep-fill{transform:scaleY(.4)}}
@@ -47,7 +47,14 @@ input:focus,select:focus,button:focus-visible,.rep:focus-visible{outline:2px sol
 #top{display:none}
 .app-mode #top{display:flex}
 .app-mode main{padding-top:calc(env(safe-area-inset-top,0px) + 4.5rem)}
-#app{text-align:center}
+html,body{height:100%;overflow:hidden}
+#app{text-align:center;overscroll-behavior:contain}
+/* поле-граница в плане: тянуть вправо/влево */
+.numcell{position:relative;width:76px;height:52px;display:grid;place-items:center;border-radius:.9rem;background:#222630;border:1px solid #2c313a;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab;transition:border-color .2s,box-shadow .2s}
+.numcell::before,.numcell::after{content:'‹';position:absolute;top:50%;transform:translateY(-50%);font-size:1.1rem;line-height:1;color:#8b93a1;opacity:.35}
+.numcell::before{left:8px}.numcell::after{content:'›';right:8px}
+.nv{display:block;font-size:1.4rem;font-weight:600}
+.numcell.drag{border-color:#6fa8dc;box-shadow:0 0 0 3px rgba(111,168,220,.25)}
 #app>*{max-width:36rem;margin-inline:auto}
 [data-act="rest"]{-webkit-touch-callout:none;-webkit-user-select:none;touch-action:manipulation}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -56,8 +63,10 @@ input:focus,select:focus,button:focus-visible,.rep:focus-visible{outline:2px sol
 <body>
 <header id="top" class="fixed z-30 top-0 left-0 right-0 md:left-44 items-center justify-between pl-5 pr-2 bg-ink border-b border-line" style="height:calc(48px + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px)"><span class="font-semibold">Fullbody <span data-ver class="text-xs font-normal text-mute align-middle"></span></span><button data-act="quit" aria-label="Закрыть приложение" class="w-12 h-12 grid place-items-center text-2xl text-mute">✕</button></header>
 <nav id="nav" class="fixed z-30 bottom-0 inset-x-0 h-16 flex bg-panel border-t border-line md:inset-y-0 md:right-auto md:w-44 md:h-auto md:flex-col md:border-t-0 md:border-r md:pt-6" style="padding-bottom:env(safe-area-inset-bottom)"></nav>
-<main id="app" class="md:ml-44 px-4 pt-6 pb-48"></main>
-<div id="timer" class="fixed z-20 inset-x-0 bottom-16 md:left-44 md:bottom-0 hidden"></div>
+<div id="stage" class="fixed inset-x-0 top-0 bottom-16 md:left-44 md:bottom-0 flex flex-col">
+<main id="app" class="flex-1 min-h-0 overflow-y-auto px-4 pt-6 pb-6"></main>
+<div id="timer" class="shrink-0 hidden bg-panel border-t border-line"></div>
+</div>
 <script src="app.js"></script>
 </body>
 </html>
