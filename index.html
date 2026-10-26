@@ -59,8 +59,16 @@ html,body{height:100%;overflow:hidden}
 .numcell.mini .nv{font-size:1.05rem}
 .numcell.mini::before,.numcell.mini::after{font-size:.8rem}
 .numcell.mini::before{left:4px}.numcell.mini::after{right:4px}
-input.p-name{font-weight:500;background:transparent}
-input.p-mus{font-size:.875rem;color:#8b93a1;background:transparent}
+.numcell.pl{width:76px;height:46px;border-radius:.8rem}.numcell.pl .nv{font-size:1.25rem}
+textarea.p-name,textarea.p-mus{display:block;width:100%;background:transparent;border:0;padding:0;margin:0;resize:none;overflow:hidden;text-align:center;color:#e6e9ee;font-family:inherit;border-radius:.4rem}
+textarea.p-name{font-size:1.25rem;line-height:1.4;font-weight:600}
+textarea.p-mus{margin-top:.5rem;font-size:.9375rem;line-height:1.35;color:#8fa1bd}
+textarea.p-name::placeholder,textarea.p-mus::placeholder{color:#8b93a1;opacity:.7}
+textarea.p-name:focus,textarea.p-mus:focus{outline:2px solid #6fa8dc;outline-offset:3px}
+.media{position:relative;width:min(50%,16rem);min-width:11rem;aspect-ratio:272/260;margin:1.25rem auto 0;border-radius:.75rem;border:1px solid #2c313a;background:#14171b;overflow:hidden;display:grid;place-items:center;cursor:pointer}
+.media .mv{height:70%;width:auto;margin-top:-6%}
+.media .media-cap{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:.6875rem;color:#8b93a1}
+.del{color:#8fa1bd}
 .rep.lock .rep-val{opacity:.45}
 #app>*{max-width:36rem;margin-inline:auto}
 [data-act="rest"]{-webkit-touch-callout:none;-webkit-user-select:none;touch-action:manipulation}

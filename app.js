@@ -16,7 +16,7 @@ X('Подтягивания обратным или узким нейтраль�
 X('Отжимания от пола с ногами на возвышении','верх груди, трицепс',2,3,10,15),
 X('Подъёмы согнутых ног к груди в висе (до технического отказа)','пресс, кор',2,3,8,15),
 X('Приседания на одной ноге («пистолетики» с опорой)','ноги, стабилизаторы',2,2,8,12)]}});
-const APP_VER='1.14',APP_DATE='26.10.2026';
+const APP_VER='1.15',APP_DATE='26.10.2026';
 let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT=`${APP_VER} · ${APP_DATE}`;
 const HINT='Верхняя граница достигнута! Пора усложнять упражнение или добавлять вес.';
 const fmt=d=>new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
@@ -89,21 +89,19 @@ ${rows.length?`<div class="${card} mb-4"><div class="text-mute text-sm mb-1">П�
 :'<p class="text-mute">По этому упражнению ещё нет записей.</p>'}`}
 
 function planView(){
-const nc=(d,i,k,v)=>`<div class="numcell mini" data-num="${d}.${i}.${k}" role="slider" tabindex="0" aria-valuenow="${v}"><span class="nv num">${v}</span></div>`;
+const nc=(d,i,k,v)=>`<div class="numcell pl" data-num="${d}.${i}.${k}" role="slider" tabindex="0" aria-valuenow="${v}"><span class="nv num">${v}</span></div>`;
+const row=(d,i,a,b)=>`<div class="flex items-center justify-center gap-3">${nc(d,i,a,plan[d].ex[i][a])}<span class="text-mute">–</span>${nc(d,i,b,plan[d].ex[i][b])}</div>`;
 return `<h1 class="text-2xl font-semibold mb-4">План</h1>
-${['A','B'].map(d=>`<section class="${card} mb-4"><div class="font-medium mb-3">${esc(plan[d].title)}</div><div class="space-y-5">
+${['A','B'].map(d=>`<div class="mb-8"><h2 class="text-lg font-semibold mb-3">${esc(plan[d].title)}</h2><div class="space-y-4">
 ${plan[d].ex.map((e,i)=>{const id=`${d}.${i}`;
-return `<div class="pb-5 border-b border-line last:border-0 last:pb-0">
-<div class="flex items-start gap-3">
-<div class="flex-1 min-w-0">
-<div class="text-xs text-mute mb-1">Упражнение</div>
-<textarea data-p="${id}.name" rows="1" placeholder="Упражнение" class="p-name w-full">${esc(e.name)}</textarea>
-<button data-act="media" data-v="${id}" class="pmus mt-1"><span class="block text-xs text-mute">Целевые группы</span><span class="block text-sm text-mute truncate">${esc(e.muscles)||'—'}</span></button></div>
-<div class="shrink-0 text-center"><div class="text-xs text-mute mb-1">Картинка</div><div class="media" data-act="media" data-v="${id}" data-media="${id}" role="button" tabindex="0" aria-label="Картинка упражнения, тап — переключить">${media(e)}</div></div></div>
-<div class="mt-4"><div class="text-sm font-medium text-center mb-2">Подходы</div><div class="flex items-center justify-center gap-1.5">${nc(d,i,'smin',e.smin)}<span class="text-mute">–</span>${nc(d,i,'smax',e.smax)}</div></div>
-<div class="mt-4"><div class="text-sm font-medium text-center mb-2">Повторение</div><div class="flex items-center justify-center gap-1.5">${nc(d,i,'min',e.min)}<span class="text-mute">–</span>${nc(d,i,'max',e.max)}</div></div>
-<button data-act="delEx" data-v="${id}" class="text-mute text-sm min-h-[40px] mt-4 w-full">Удалить упражнение</button></div>`}).join('')}</div>
-<button data-act="addEx" data-v="${d}" class="${sec} w-full mt-4">Добавить упражнение</button></section>`).join('')}
+return `<section class="${card} !p-4">
+<textarea data-p="${id}.name" rows="1" placeholder="Упражнение" class="p-name">${esc(e.name)}</textarea>
+<textarea data-p="${id}.muscles" rows="1" placeholder="Целевые группы" class="p-mus">${esc(e.muscles)}</textarea>
+<div class="media" data-act="media" data-v="${id}" data-media="${id}" role="button" tabindex="0" aria-label="Картинка упражнения, тап — переключить">${media(e)}</div>
+<div class="mt-6"><div class="text-base text-center mb-2.5">Подходы</div>${row(d,i,'smin','smax')}</div>
+<div class="mt-5"><div class="text-base text-center mb-2.5">Повторение</div>${row(d,i,'min','max')}</div>
+<div class="mt-6 border-t border-line"><button data-act="delEx" data-v="${id}" class="del w-full min-h-[48px] mt-1 text-sm">Удалить упражнение</button></div></section>`}).join('')}</div>
+<button data-act="addEx" data-v="${d}" class="${sec} w-full mt-4">Добавить упражнение</button></div>`).join('')}
 <div class="flex gap-3"><button data-act="export" class="${sec} flex-1">Экспорт данных</button><button data-act="reset" class="${sec} flex-1">Сбросить план</button></div>
 <p data-ver class="text-center text-[10px] text-mute mt-6"></p>`}
 
@@ -111,7 +109,7 @@ const TABS=[['train','Тренировка'],['diary','Дневник'],['progre
 function render(){
 $('#nav').innerHTML=`<div class="hidden md:block px-4 pb-6 text-lg font-semibold">Fullbody <span data-ver class="text-xs font-normal text-mute align-middle"></span></div>`+TABS.map(([k,l])=>`<button data-act="nav" data-v="${k}" class="flex-1 md:flex-none md:text-left md:px-4 md:h-12 text-sm md:text-base ${view===k?'text-accent border-t-2 md:border-t-0 md:border-l-2 border-accent bg-raise':'text-mute border-t-2 md:border-l-2 border-transparent'}">${l}</button>`).join('');
 if(view==='train'&&!sess)beginSession();
-$('#app').innerHTML={train:trainView,diary:diaryView,progress:progressView,plan:planView}[view]();paintTimer();paintVer()}
+$('#app').innerHTML={train:trainView,diary:diaryView,progress:progressView,plan:planView}[view]();paintTimer();paintVer();document.querySelectorAll('textarea.p-name,textarea.p-mus').forEach(fit)}
 
 /* ---------- События ---------- */
 let lpT=null,lpF=false;
@@ -139,7 +137,8 @@ else if(a==='export'){const b=new Blob([JSON.stringify({plan,logs},null,1)],{typ
 document.addEventListener('change',e=>{const t=e.target;
 if(t.dataset.p){const[d,i,k]=t.dataset.p.split('.');plan[d].ex[+i][k]=t.value;sv('fb_plan',plan)}
 else if('pick' in t.dataset){pick=t.value;render()}});
-document.addEventListener('input',e=>{const t=e.target;if(t.matches?.('textarea.p-name')){t.style.height='auto';t.style.height=t.scrollHeight+'px'}});
+const fit=t=>{t.style.height='auto';t.style.height=t.scrollHeight+'px'};
+document.addEventListener('input',e=>{const t=e.target;if(t.matches?.('textarea.p-name,textarea.p-mus'))fit(t)});
 
 if(matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches||navigator.standalone)document.documentElement.classList.add('app-mode');
 
