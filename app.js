@@ -16,7 +16,7 @@ X('Подтягивания обратным или узким нейтраль�
 X('Отжимания от пола с ногами на возвышении','верх груди, трицепс',2,3,10,15),
 X('Подъёмы согнутых ног к груди в висе (до технического отказа)','пресс, кор',2,3,8,15),
 X('Приседания на одной ноге («пистолетики» с опорой)','ноги, стабилизаторы',2,2,8,12)]}});
-const APP_VER='1.9',APP_DATE='26.10.2026';
+const APP_VER='1.10',APP_DATE='26.10.2026';
 let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT=`${APP_VER} · ${APP_DATE}`;
 const HINT='Верхняя граница достигнута! Пора усложнять упражнение или добавлять вес.';
 const fmt=d=>new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
@@ -51,7 +51,7 @@ ${run?`<div class="flex items-center gap-3"><div class="num text-3xl font-semibo
 function trainView(){
 return `<div class="flex items-center justify-between mb-1"><h1 class="text-2xl font-semibold">${esc(plan[sess.day].title)}</h1>
 <button data-act="cancel" class="text-mute min-h-[48px] px-2">Сбросить</button></div>
-<p class="text-mute text-sm mb-4">Удерживайте поле — засчитается число из подсказки. Потяните вправо или влево — изменить число.</p>
+<p class="text-mute text-sm mb-4">Удерживайте кружок — засчитается число из подсказки. Потяните вправо или влево — изменить число: чем дальше от точки касания, тем быстрее.</p>
 <div class="space-y-4">${sess.items.map((it,i)=>{const p=prevOf(it.name);
 return `<section class="${card} !p-4"><div class="font-medium">${esc(it.name)}</div>
 <div class="text-mute text-sm mb-1">${esc(it.muscles)}</div>
@@ -135,7 +135,11 @@ if(matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches|
 
 /* ---------- Ввод повторений без клавиатуры ----------
    удержание на поле = засчитать число из подсказки; потянуть вправо/влево = изменить число */
-const HOLD_MS=2000,STEP_PX=22,MOVE_PX=10,MAXREP=99;
+const HOLD_MS=670,MOVE_PX=10,MAXREP=99;           // удержание ≈0,67 с (было 2 с); мёртвая зона свайпа
+const rateOf=d=>Math.min(30,1+Math.pow(d/20,1.5)); // повторов/сек в зависимости от смещения d (px) от точки касания
+document.documentElement.style.setProperty('--hold',HOLD_MS+'ms');
+const vib=(()=>{let t=0;return ms=>{const n=Date.now();if(n-t<30)return;t=n;navigator.vibrate?.(ms)}})();
+const TICK_VIB=8,DONE_VIB=70;                      // щелчок при смене числа / длинная вибрация при «выполнено»
 const repEl=(i,j)=>document.querySelector(`[data-rep="${i}.${j}"]`);
 function paintSet(i,j){const it=sess.items[i],s=it.sets[j],el=repEl(i,j);if(!el)return;
 el.classList.toggle('done',!!s.reps);el.setAttribute('aria-valuenow',s.reps||0);el.querySelector('.rep-val').textContent=s.reps||repHint(it,j);
@@ -144,17 +148,24 @@ function setReps(i,j,v){sess.items[i].sets[j].reps=v>0?v:'';sv('fb_sess',sess);p
 const bump=(el,c)=>{el.classList.remove(c);void el.offsetWidth;el.classList.add(c)};
 let g=null;
 const endHold=()=>{if(g?.hold){clearTimeout(g.hold);g.hold=null}g?.el.classList.remove('holding')};
+function step(k,sg){const v=Math.max(0,Math.min(MAXREP,k.cur+sg));if(v===k.cur)return;k.cur=v;setReps(k.i,k.j,v);bump(k.el.querySelector('.rep-val'),'tick');vib(TICK_VIB)}
+/* пока палец тянется, число меняется со скоростью, растущей вместе со смещением от точки касания */
+function loop(t){if(!g||!g.drag)return;const dt=Math.min(.05,(t-g.t)/1000);g.t=t;
+const dx=g.lx-g.x,d=Math.abs(dx)-MOVE_PX;
+if(d>0){const sg=Math.sign(dx);if(sg!==g.sg){g.sg=sg;g.acc=.5}
+g.acc+=rateOf(d)*dt;while(g.acc>=1){g.acc-=1;step(g,sg)}}
+else{g.sg=0;g.acc=0}
+requestAnimationFrame(loop)}
 document.addEventListener('pointerdown',e=>{const el=e.target.closest('.rep');if(!el||!sess||g)return;if(e.pointerType==='mouse'&&e.button)return;
 const[i,j]=el.dataset.rep.split('.').map(Number),it=sess.items[i],s=it.sets[j];
-g={el,i,j,id:e.pointerId,x:e.clientX,lx:e.clientX,base:s.reps||repHint(it,j),drag:false,hold:null,cur:null};
+g={el,i,j,id:e.pointerId,x:e.clientX,lx:e.clientX,cur:s.reps||repHint(it,j),drag:false,hold:null,sg:0,acc:0,t:0};
 try{el.setPointerCapture(e.pointerId)}catch{}
 if(!s.reps){el.classList.add('holding');
 g.hold=setTimeout(()=>{const k=g;if(!k)return;k.hold=null;el.classList.remove('holding');
-const v=repHint(it,j);setReps(i,j,v);k.base=v;k.cur=v;k.x=k.lx;navigator.vibrate?.(40);bump(el,'pop');startRest(rest.pref)},HOLD_MS)}});
-document.addEventListener('pointermove',e=>{if(!g||e.pointerId!==g.id)return;g.lx=e.clientX;const dx=e.clientX-g.x;
-if(!g.drag){if(Math.abs(dx)<MOVE_PX)return;g.drag=true;endHold();g.el.classList.add('drag')}
-const v=Math.max(0,Math.min(MAXREP,g.base+Math.round((dx-Math.sign(dx)*MOVE_PX)/STEP_PX)));
-if(v!==g.cur){g.cur=v;setReps(g.i,g.j,v);bump(g.el.querySelector('.rep-val'),'tick');navigator.vibrate?.(6)}});
+const v=repHint(it,j);setReps(i,j,v);k.cur=v;k.x=k.lx;navigator.vibrate?.(DONE_VIB);bump(el,'pop');startRest(rest.pref)},HOLD_MS)}});
+document.addEventListener('pointermove',e=>{if(!g||e.pointerId!==g.id)return;g.lx=e.clientX;
+if(g.drag)return;const dx=g.lx-g.x;if(Math.abs(dx)<MOVE_PX)return;
+g.drag=true;endHold();g.el.classList.add('drag');g.sg=Math.sign(dx);g.acc=0;step(g,g.sg);g.t=performance.now();requestAnimationFrame(loop)});
 document.addEventListener('pointerup',e=>{if(!g||e.pointerId!==g.id)return;endHold();g.el.classList.remove('drag');
 const{i,j,drag}=g;g=null;if(drag&&sess.items[i].sets[j].reps)startRest(rest.pref)});
 document.addEventListener('pointercancel',e=>{if(!g||e.pointerId!==g.id)return;endHold();g.el.classList.remove('drag');g=null});
@@ -164,7 +175,7 @@ const[i,j]=el.dataset.rep.split('.').map(Number),it=sess.items[i],s=it.sets[j],b
 if(e.key==='Enter'||e.key===' ')v=b;
 else if(e.key==='ArrowRight'||e.key==='ArrowUp')v=Math.min(MAXREP,s.reps?b+1:b);
 else if(e.key==='ArrowLeft'||e.key==='ArrowDown')v=s.reps?b-1:0;
-if(v===null)return;e.preventDefault();setReps(i,j,v);if(v>0)startRest(rest.pref)});
+if(v===null)return;e.preventDefault();setReps(i,j,v);if(v>0){startRest(rest.pref);if(!s.reps)navigator.vibrate?.(DONE_VIB)}});
 
 render();
 if('serviceWorker' in navigator){
