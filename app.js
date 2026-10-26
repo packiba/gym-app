@@ -16,7 +16,7 @@ X('Подтягивания обратным или узким нейтраль�
 X('Отжимания от пола с ногами на возвышении','верх груди, трицепс',2,3,10,15),
 X('Подъёмы согнутых ног к груди в висе (до технического отказа)','пресс, кор',2,3,8,15),
 X('Приседания на одной ноге («пистолетики» с опорой)','ноги, стабилизаторы',2,2,8,12)]}});
-const APP_VER='1.13',APP_DATE='26.10.2026';
+const APP_VER='1.14',APP_DATE='26.10.2026';
 let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT=`${APP_VER} · ${APP_DATE}`;
 const HINT='Верхняя граница достигнута! Пора усложнять упражнение или добавлять вес.';
 const fmt=d=>new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
@@ -28,6 +28,9 @@ const seq=sets=>sets.map(s=>`${s.reps}${s.fail?'<span class="text-accent">✱</s
 const paintVer=()=>{if(VERTEXT)document.querySelectorAll('[data-ver]').forEach(el=>el.textContent=VERTEXT)};
 function prevOf(name){for(let i=logs.length-1;i>=0;i--){const it=logs[i].items.find(x=>x.name===name);if(it)return it}return null}
 const repHint=(it,j)=>{const p=prevOf(it.name);const b=p?((p.sets[j]||p.sets[p.sets.length-1]||{}).reps||0):0;return b?Math.min(it.max,b+1):it.min};
+const media=e=>e.view?
+`<svg viewBox="0 0 60 60" class="mv" aria-hidden="true"><circle cx="30" cy="10" r="6" fill="#3a4150"/><rect x="26" y="16" width="8" height="18" rx="4" fill="#3a4150"/><rect x="18" y="18" width="6" height="14" rx="3" fill="#3a4150"/><rect x="36" y="18" width="6" height="14" rx="3" fill="#3a4150"/><rect x="21" y="34" width="6" height="18" rx="3" fill="#3a4150"/><rect x="33" y="34" width="6" height="18" rx="3" fill="#3a4150"/><ellipse cx="30" cy="28" rx="7" ry="5" fill="#6fa8dc" opacity=".85"/><ellipse cx="21" cy="21" rx="4.5" ry="3.5" fill="#6fa8dc" opacity=".85"/><ellipse cx="39" cy="21" rx="4.5" ry="3.5" fill="#6fa8dc" opacity=".85"/></svg><span class="media-cap">целевые мышцы</span>`:
+`<svg viewBox="0 0 60 60" class="mv fig" aria-hidden="true"><circle cx="30" cy="12" r="6" fill="#8b93a1"/><rect x="26.5" y="19" width="7" height="16" rx="3.5" fill="#8b93a1"/><rect x="19" y="21" width="5" height="13" rx="2.5" fill="#8b93a1"/><rect x="36" y="21" width="5" height="13" rx="2.5" fill="#8b93a1"/><rect x="22" y="36" width="5.5" height="16" rx="2.75" fill="#8b93a1"/><rect x="32.5" y="36" width="5.5" height="16" rx="2.75" fill="#8b93a1"/></svg><span class="media-cap">анимация выполнения</span>`;
 function nextDay(){const last=logs[logs.length-1];return !last?'A':(last.day==='A'?'B':'A')}
 function beginSession(){const d=nextDay();sess={day:d,title:plan[d].title,date:new Date().toISOString(),items:plan[d].ex.map(x=>({name:x.name,muscles:x.muscles,smin:x.smin,smax:x.smax,min:x.min,max:x.max,sets:Array.from({length:x.smax},()=>({reps:'',fail:false}))}))};sv('fb_sess',sess)}
 
@@ -58,7 +61,7 @@ return `<section class="${card} !p-4"><div class="font-medium">${esc(it.name)}</
 <div class="grid gap-2 items-start" style="grid-template-columns:repeat(${Math.min(it.sets.length,4)},minmax(0,1fr))">${it.sets.map((s,j)=>`<div class="flex flex-col items-center">
 <div class="text-xs text-mute mb-2">Подход ${j+1}</div>
 <div class="rep ${s.reps?'done':''} ${s.fail?'fail':''} ${!s.reps&&j&&!(sess.items[i].sets[j-1].reps>0)?'lock':''}" data-rep="${i}.${j}" role="slider" tabindex="0" aria-label="Повторения, подход ${j+1}" aria-valuemin="0" aria-valuenow="${s.reps||0}"><span class="rep-fill"></span><span class="rep-val num">${s.reps||repHint(it,j)}</span></div>
-<div class="failtxt ${s.fail?'on':''}" data-fl="${i}.${j}">${s.fail?'до отказа':'подход без отказа'}</div></div>`).join('')}</div>
+<div class="failtxt ${s.fail?'on':''}" data-fl="${i}.${j}">до отказа</div></div>`).join('')}</div>
 <p id="h${i}" class="mt-3 rounded-lg bg-raise px-3 py-2.5 text-good text-sm ${first(it)>=it.max?'':'hidden'}">${HINT}</p></section>`}).join('')}</div>
 <button data-act="finish" class="${prim} w-full mt-6">Завершить тренировку</button>`}
 
@@ -88,12 +91,18 @@ ${rows.length?`<div class="${card} mb-4"><div class="text-mute text-sm mb-1">П�
 function planView(){
 const nc=(d,i,k,v)=>`<div class="numcell mini" data-num="${d}.${i}.${k}" role="slider" tabindex="0" aria-valuenow="${v}"><span class="nv num">${v}</span></div>`;
 return `<h1 class="text-2xl font-semibold mb-4">План</h1>
-${['A','B'].map(d=>`<section class="${card} mb-4"><div class="font-medium mb-3">${esc(plan[d].title)}</div><div class="space-y-4">
-${plan[d].ex.map((e,i)=>`<div class="pb-4 border-b border-line last:border-0 last:pb-0">
-<input data-p="${d}.${i}.name" type="text" value="${esc(e.name)}" class="p-name">
-<input data-p="${d}.${i}.muscles" type="text" value="${esc(e.muscles)}" class="p-mus">
-<div class="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-2 py-2">${nc(d,i,'smin',e.smin)}<span class="text-mute">–</span>${nc(d,i,'smax',e.smax)}<span class="text-sm text-mute">подх.</span><span class="text-mute mx-0.5">×</span>${nc(d,i,'min',e.min)}<span class="text-mute">–</span>${nc(d,i,'max',e.max)}<span class="text-sm text-mute">повт.</span></div>
-<button data-act="delEx" data-v="${d}.${i}" class="text-mute text-sm min-h-[40px]">Удалить упражнение</button></div>`).join('')}</div>
+${['A','B'].map(d=>`<section class="${card} mb-4"><div class="font-medium mb-3">${esc(plan[d].title)}</div><div class="space-y-5">
+${plan[d].ex.map((e,i)=>{const id=`${d}.${i}`;
+return `<div class="pb-5 border-b border-line last:border-0 last:pb-0">
+<div class="flex items-start gap-3">
+<div class="flex-1 min-w-0">
+<div class="text-xs text-mute mb-1">Упражнение</div>
+<textarea data-p="${id}.name" rows="1" placeholder="Упражнение" class="p-name w-full">${esc(e.name)}</textarea>
+<button data-act="media" data-v="${id}" class="pmus mt-1"><span class="block text-xs text-mute">Целевые группы</span><span class="block text-sm text-mute truncate">${esc(e.muscles)||'—'}</span></button></div>
+<div class="shrink-0 text-center"><div class="text-xs text-mute mb-1">Картинка</div><div class="media" data-act="media" data-v="${id}" data-media="${id}" role="button" tabindex="0" aria-label="Картинка упражнения, тап — переключить">${media(e)}</div></div></div>
+<div class="mt-4"><div class="text-sm font-medium text-center mb-2">Подходы</div><div class="flex items-center justify-center gap-1.5">${nc(d,i,'smin',e.smin)}<span class="text-mute">–</span>${nc(d,i,'smax',e.smax)}</div></div>
+<div class="mt-4"><div class="text-sm font-medium text-center mb-2">Повторение</div><div class="flex items-center justify-center gap-1.5">${nc(d,i,'min',e.min)}<span class="text-mute">–</span>${nc(d,i,'max',e.max)}</div></div>
+<button data-act="delEx" data-v="${id}" class="text-mute text-sm min-h-[40px] mt-4 w-full">Удалить упражнение</button></div>`}).join('')}</div>
 <button data-act="addEx" data-v="${d}" class="${sec} w-full mt-4">Добавить упражнение</button></section>`).join('')}
 <div class="flex gap-3"><button data-act="export" class="${sec} flex-1">Экспорт данных</button><button data-act="reset" class="${sec} flex-1">Сбросить план</button></div>
 <p data-ver class="text-center text-[10px] text-mute mt-6"></p>`}
@@ -123,12 +132,14 @@ else if(a==='skip')stopRest();
 else if(a==='delLog'){if(confirm('Удалить запись?')){logs=logs.filter(l=>l.id!==v);sv('fb_logs',logs);render()}}
 else if(a==='addEx'){plan[v].ex.push(X('Новое упражнение','',2,3,8,12));sv('fb_plan',plan);render()}
 else if(a==='delEx'){const[d,i]=v.split('.');if(confirm('Удалить упражнение из плана?')){plan[d].ex.splice(+i,1);sv('fb_plan',plan);render()}}
+else if(a==='media'){const[d,i]=v.split('.').map(Number);const ex=plan[d].ex[i];ex.view=!ex.view;const box=document.querySelector(`[data-media="${v}"]`);if(box)box.innerHTML=media(ex)}
 else if(a==='reset'){if(confirm('Вернуть стартовую программу? Ваши правки плана будут потеряны, история останется.')){plan=defPlan();sv('fb_plan',plan);render()}}
 else if(a==='export'){const b=new Blob([JSON.stringify({plan,logs},null,1)],{type:'application/json'}),u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='fullbody-backup.json';l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}});
 
 document.addEventListener('change',e=>{const t=e.target;
 if(t.dataset.p){const[d,i,k]=t.dataset.p.split('.');plan[d].ex[+i][k]=t.value;sv('fb_plan',plan)}
 else if('pick' in t.dataset){pick=t.value;render()}});
+document.addEventListener('input',e=>{const t=e.target;if(t.matches?.('textarea.p-name')){t.style.height='auto';t.style.height=t.scrollHeight+'px'}});
 
 if(matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches||navigator.standalone)document.documentElement.classList.add('app-mode');
 
@@ -147,7 +158,7 @@ function paintSet(i,j){const it=sess.items[i],s=it.sets[j],el=repEl(i,j);if(!el)
 el.classList.toggle('done',!!s.reps);el.classList.toggle('lock',!s.reps&&j>0&&!(it.sets[j-1].reps>0));el.setAttribute('aria-valuenow',s.reps||0);el.querySelector('.rep-val').textContent=s.reps||repHint(it,j);
 $('#h'+i).classList.toggle('hidden',!(first(it)>=it.max))}
 function setFail(i,j,on){const s=sess.items[i].sets[j];s.fail=!!on;sv('fb_sess',sess);repEl(i,j)?.classList.toggle('fail',!!on);
-const f=flEl(i,j);if(f){f.classList.toggle('on',!!on);f.textContent=on?'до отказа':'подход без отказа'}}
+const f=flEl(i,j);if(f){f.classList.toggle('on',!!on);f.textContent='до отказа'}}
 function setReps(i,j,v){const sets=sess.items[i].sets;
 if(v>0&&j&&!(sets[j-1].reps>0))return false;
 if(v>0)sets[j].reps=v;
@@ -156,7 +167,7 @@ sv('fb_sess',sess);
 if(v>0)paintSet(i,j);else for(let k=j;k<sets.length;k++)paintSet(i,k);
 return true}
 function paintNum(d,i){const e=plan[d].ex[i];['smin','smax','min','max'].forEach(k=>{const el=document.querySelector(`[data-num="${d}.${i}.${k}"]`);
-if(el){el.querySelector('.nv').textContent=e[k];el.setAttribute('aria-valuenow',e[k])}})}
+if(el){el.querySelector('.nv').textContent=e[k];el.setAttribute('aria-valuenow',e[k])}});}
 const bump=(el,c)=>{el.classList.remove(c);void el.offsetWidth;el.classList.add(c)};
 /* адаптер: что именно крутит жест — подход на тренировке или граница в плане */
 function adapt(el){

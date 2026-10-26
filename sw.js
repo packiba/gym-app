@@ -1,4 +1,4 @@
-const VER='1.13',VDATE='26.10.2026';
+const VER='1.14',VDATE='26.10.2026';
 const V='fullbody-v'+VER,TW='https://cdn.tailwindcss.com/3.4.17';
 const SHELL=['./','./index.html','./app.js','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 const put=(r,n)=>{if(n.ok||n.type==='opaque'){const cp=n.clone();caches.open(V).then(c=>c.put(r,cp))}return n};
