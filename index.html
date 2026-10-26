@@ -21,6 +21,26 @@ body input:not([type=checkbox]),body select{background:#222630;border:1px solid 
 body input::placeholder{color:#8b93a1;opacity:1}
 input:focus,select:focus,button:focus-visible{outline:2px solid #6fa8dc;outline-offset:1px}
 body input[type=checkbox]{width:28px;height:28px;min-height:0;accent-color:#6fa8dc;padding:0}
+/* Поле повторений: не input, клавиатура не нужна */
+.rep{position:relative;overflow:hidden;width:100%;height:68px;display:grid;place-items:center;border-radius:1rem;background:#222630;border:1.5px dashed #3a4150;
+ touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab;transition:border-color .2s,background .2s}
+.rep::before,.rep::after{position:absolute;top:50%;transform:translateY(-50%);font-size:1.25rem;line-height:1;color:#8b93a1;opacity:.35;z-index:1}
+.rep::before{content:'‹';left:9px}.rep::after{content:'›';right:9px}
+.rep-val{position:relative;z-index:1;font-size:1.9rem;font-weight:600;color:#8b93a1;transition:color .2s}
+.rep-fill{position:absolute;inset:0;background:linear-gradient(90deg,rgba(111,168,220,.18),rgba(111,168,220,.55));transform:scaleX(0);transform-origin:left;transition:transform .25s ease-out}
+.rep.holding{border-color:#6fa8dc}
+.rep.holding .rep-fill{transform:scaleX(1);transition:transform 2s linear}
+.rep.holding .rep-val{color:#e6e9ee}
+.rep.done{border-style:solid;border-color:#6fa8dc;background:rgba(111,168,220,.12)}
+.rep.done .rep-val{color:#e6e9ee}
+.rep.drag{cursor:grabbing;box-shadow:0 0 0 3px rgba(111,168,220,.25)}
+.rep.pop{animation:pop .45s ease-out}
+.tick{animation:tick .18s ease-out}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.07);box-shadow:0 0 0 7px rgba(124,196,160,.35)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(124,196,160,0)}}
+@keyframes tick{0%{transform:scale(1.28)}100%{transform:scale(1)}}
+.fail{display:flex;align-items:center;gap:.35rem;min-height:40px;font-size:.75rem;color:#8b93a1;white-space:nowrap}
+body .fail input[type=checkbox]{width:22px;height:22px}
+@media (prefers-reduced-motion:reduce){.rep.holding .rep-fill{transform:scaleX(.4)}}
 .num{font-variant-numeric:tabular-nums}
 #top{display:none}
 .app-mode #top{display:flex}
@@ -34,7 +54,6 @@ body input[type=checkbox]{width:28px;height:28px;min-height:0;accent-color:#6fa8
 <header id="top" class="fixed z-30 top-0 left-0 right-0 md:left-44 items-center justify-between pl-5 pr-2 bg-ink border-b border-line" style="height:calc(48px + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px)"><span class="font-semibold">Fullbody <span data-ver class="text-xs font-normal text-mute align-middle"></span></span><button data-act="quit" aria-label="Закрыть приложение" class="w-12 h-12 grid place-items-center text-2xl text-mute">✕</button></header>
 <nav id="nav" class="fixed z-30 bottom-0 inset-x-0 h-16 flex bg-panel border-t border-line md:inset-y-0 md:right-auto md:w-44 md:h-auto md:flex-col md:border-t-0 md:border-r md:pt-6" style="padding-bottom:env(safe-area-inset-bottom)"></nav>
 <main id="app" class="md:ml-44 px-4 pt-6 pb-48"></main>
-<button id="done" class="hidden fixed z-40 right-3 min-h-[44px] px-5 rounded-xl bg-accent text-ink font-medium shadow-xl">Готово</button>
 <div id="timer" class="fixed z-20 inset-x-0 bottom-16 md:left-44 md:bottom-0 hidden"></div>
 <script src="app.js"></script>
 </body>
