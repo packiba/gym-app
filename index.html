@@ -17,10 +17,10 @@
 :root{color-scheme:dark}
 html,body{background:#121417;color:#e6e9ee;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
 /* body-префикс нужен, чтобы перебить preflight Tailwind (input{padding:0}), который грузится позже */
-body input:not([type=checkbox]),body select{background:#222630;border:1px solid #2c313a;border-radius:.6rem;color:inherit;min-height:48px;padding:.625rem .875rem;width:100%}
+body input:not([type=checkbox]),body select{background:#222630;border:1px solid #2c313a;border-radius:.6rem;color:inherit;min-height:48px;padding:.625rem .875rem;width:100%;text-align:center}
+body select{text-align-last:center}
 body input::placeholder{color:#8b93a1;opacity:1}
-input:focus,select:focus,button:focus-visible{outline:2px solid #6fa8dc;outline-offset:1px}
-body input[type=checkbox]{width:28px;height:28px;min-height:0;accent-color:#6fa8dc;padding:0}
+input:focus,select:focus,button:focus-visible,.rep:focus-visible{outline:2px solid #6fa8dc;outline-offset:1px}
 /* Поле повторений: не input, клавиатура не нужна */
 .rep{position:relative;overflow:hidden;width:min(100%,84px);aspect-ratio:1;display:grid;place-items:center;border-radius:50%;background:#222630;border:1.5px dashed #3a4150;
  touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab;transition:border-color .2s,background .2s}
@@ -38,14 +38,17 @@ body input[type=checkbox]{width:28px;height:28px;min-height:0;accent-color:#6fa8
 .tick{animation:tick .18s ease-out}
 @keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.07);box-shadow:0 0 0 7px rgba(124,196,160,.35)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(124,196,160,0)}}
 @keyframes tick{0%{transform:scale(1.28)}100%{transform:scale(1)}}
-.fail{display:flex;align-items:center;gap:.35rem;min-height:40px;font-size:.75rem;color:#8b93a1;white-space:nowrap}
-body .fail input[type=checkbox]{width:22px;height:22px}
+.failbtn{min-height:40px;padding:0 .8rem;border-radius:9999px;background:#222630;border:1px solid #2c313a;color:#8b93a1;font-size:.75rem;white-space:nowrap;transition:background .2s,border-color .2s,color .2s}
+.failbtn.on{background:rgba(224,112,108,.16);border-color:#e0706c;color:#ee8f8b}
+.rep.fail .rep-val{color:#e5726e}
+.rep.fail:not(.done) .rep-val{opacity:.6}
 @media (prefers-reduced-motion:reduce){.rep.holding .rep-fill{transform:scaleY(.4)}}
 .num{font-variant-numeric:tabular-nums}
 #top{display:none}
 .app-mode #top{display:flex}
 .app-mode main{padding-top:calc(env(safe-area-inset-top,0px) + 4.5rem)}
-@media(min-width:768px){#app>*{max-width:56rem;margin-inline:auto}}
+#app{text-align:center}
+#app>*{max-width:36rem;margin-inline:auto}
 [data-act="rest"]{-webkit-touch-callout:none;-webkit-user-select:none;touch-action:manipulation}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
