@@ -55,6 +55,13 @@ html,body{height:100%;overflow:hidden}
 .numcell::before{left:8px}.numcell::after{content:'›';right:8px}
 .nv{display:block;font-size:1.4rem;font-weight:600}
 .numcell.drag{border-color:#6fa8dc;box-shadow:0 0 0 3px rgba(111,168,220,.25)}
+.numcell.mini{width:56px;height:44px;border-radius:.7rem}
+.numcell.mini .nv{font-size:1.05rem}
+.numcell.mini::before,.numcell.mini::after{font-size:.8rem}
+.numcell.mini::before{left:4px}.numcell.mini::after{right:4px}
+input.p-name{font-weight:500;background:transparent}
+input.p-mus{font-size:.875rem;color:#8b93a1;background:transparent}
+.rep.lock .rep-val{opacity:.45}
 #app>*{max-width:36rem;margin-inline:auto}
 [data-act="rest"]{-webkit-touch-callout:none;-webkit-user-select:none;touch-action:manipulation}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
