@@ -16,7 +16,7 @@ X('Подтягивания обратным или узким нейтраль�
 X('Отжимания от пола с ногами на возвышении','верх груди, трицепс',2,3,10,15),
 X('Подъёмы согнутых ног к груди в висе (до технического отказа)','пресс, кор',2,3,8,15),
 X('Приседания на одной ноге («пистолетики» с опорой)','ноги, стабилизаторы',2,2,8,12)]}});
-const APP_VER='1.15',APP_DATE='26.10.2026';
+const APP_VER='1.16',APP_DATE='26.10.2026';
 let plan=ld('fb_plan',null)||defPlan(), logs=ld('fb_logs',[]), sess=ld('fb_sess',null), view='train', pick='', VERTEXT=`${APP_VER} · ${APP_DATE}`;
 const HINT='Верхняя граница достигнута! Пора усложнять упражнение или добавлять вес.';
 const fmt=d=>new Date(d).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
@@ -28,7 +28,19 @@ const seq=sets=>sets.map(s=>`${s.reps}${s.fail?'<span class="text-accent">✱</s
 const paintVer=()=>{if(VERTEXT)document.querySelectorAll('[data-ver]').forEach(el=>el.textContent=VERTEXT)};
 function prevOf(name){for(let i=logs.length-1;i>=0;i--){const it=logs[i].items.find(x=>x.name===name);if(it)return it}return null}
 const repHint=(it,j)=>{const p=prevOf(it.name);const b=p?((p.sets[j]||p.sets[p.sets.length-1]||{}).reps||0):0;return b?Math.min(it.max,b+1):it.min};
-const media=e=>e.view?
+const VID={
+'Подтягивания прямым средним или широким хватом':'media/pullup-wide.mp4',
+'Отжимания на брусьях':'media/dips.mp4',
+'Австралийские подтягивания на низком турнике':'media/australian-pullup.mp4',
+'Болгарские выпады':'media/bulgarian-split-squat.mp4',
+'Подтягивания обратным или узким нейтральным хватом':'media/pullup-narrow.mp4',
+'Отжимания от пола с ногами на возвышении':'media/pushup-feet-elevated.mp4',
+'Подъёмы согнутых ног к груди в висе (до технического отказа)':'media/hanging-knee-raise.mp4',
+'Приседания на одной ноге («пистолетики» с опорой)':'media/pistol-squat.mp4'};
+const badVid=new Set();
+const media=e=>{const src=VID[e.name];return(!e.view&&src&&!badVid.has(src))?`<video src="${src}" autoplay loop muted playsinline preload="auto" disablepictureinpicture></video>`:mediaSvg(e)};
+document.addEventListener('error',ev=>{const v=ev.target;if(v.tagName!=='VIDEO')return;const box=v.closest('[data-media]');if(!box)return;badVid.add(v.getAttribute('src'));const[d,i]=box.dataset.media.split('.');const ex=plan[d]?.ex[+i];if(ex)box.innerHTML=mediaSvg(ex)},true);
+const mediaSvg=e=>e.view?
 `<svg viewBox="0 0 60 60" class="mv" aria-hidden="true"><circle cx="30" cy="10" r="6" fill="#3a4150"/><rect x="26" y="16" width="8" height="18" rx="4" fill="#3a4150"/><rect x="18" y="18" width="6" height="14" rx="3" fill="#3a4150"/><rect x="36" y="18" width="6" height="14" rx="3" fill="#3a4150"/><rect x="21" y="34" width="6" height="18" rx="3" fill="#3a4150"/><rect x="33" y="34" width="6" height="18" rx="3" fill="#3a4150"/><ellipse cx="30" cy="28" rx="7" ry="5" fill="#6fa8dc" opacity=".85"/><ellipse cx="21" cy="21" rx="4.5" ry="3.5" fill="#6fa8dc" opacity=".85"/><ellipse cx="39" cy="21" rx="4.5" ry="3.5" fill="#6fa8dc" opacity=".85"/></svg><span class="media-cap">целевые мышцы</span>`:
 `<svg viewBox="0 0 60 60" class="mv fig" aria-hidden="true"><circle cx="30" cy="12" r="6" fill="#8b93a1"/><rect x="26.5" y="19" width="7" height="16" rx="3.5" fill="#8b93a1"/><rect x="19" y="21" width="5" height="13" rx="2.5" fill="#8b93a1"/><rect x="36" y="21" width="5" height="13" rx="2.5" fill="#8b93a1"/><rect x="22" y="36" width="5.5" height="16" rx="2.75" fill="#8b93a1"/><rect x="32.5" y="36" width="5.5" height="16" rx="2.75" fill="#8b93a1"/></svg><span class="media-cap">анимация выполнения</span>`;
 function nextDay(){const last=logs[logs.length-1];return !last?'A':(last.day==='A'?'B':'A')}
@@ -130,7 +142,7 @@ else if(a==='skip')stopRest();
 else if(a==='delLog'){if(confirm('Удалить запись?')){logs=logs.filter(l=>l.id!==v);sv('fb_logs',logs);render()}}
 else if(a==='addEx'){plan[v].ex.push(X('Новое упражнение','',2,3,8,12));sv('fb_plan',plan);render()}
 else if(a==='delEx'){const[d,i]=v.split('.');if(confirm('Удалить упражнение из плана?')){plan[d].ex.splice(+i,1);sv('fb_plan',plan);render()}}
-else if(a==='media'){const[d,i]=v.split('.').map(Number);const ex=plan[d].ex[i];ex.view=!ex.view;const box=document.querySelector(`[data-media="${v}"]`);if(box)box.innerHTML=media(ex)}
+else if(a==='media'){const[d,i]=v.split('.');const ex=plan[d].ex[+i];ex.view=!ex.view;const box=document.querySelector(`[data-media="${v}"]`);if(box)box.innerHTML=media(ex)}
 else if(a==='reset'){if(confirm('Вернуть стартовую программу? Ваши правки плана будут потеряны, история останется.')){plan=defPlan();sv('fb_plan',plan);render()}}
 else if(a==='export'){const b=new Blob([JSON.stringify({plan,logs},null,1)],{type:'application/json'}),u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download='fullbody-backup.json';l.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}});
 
